@@ -23,6 +23,7 @@ We wanted this file to help us handle calculation verification within our model.
 
 ## Simulation.py
 
+### Implements class that manages the overall N-body system and its evolution over time. It initializes with a list of bodies objects (from Body.py) and a time step, then executes the main simulation loop. In each step, it orchestrates the calculation of net gravitational forces on every body by calling methods in Body.py, then uses these forces to update each body's velocity and its position, again by invoking methods from Body.py. It records the trajectory of each body, ultimately returning a complete position history suitable for analysis or visualization.
 
 ## Body.py
 
