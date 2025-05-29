@@ -1,4 +1,31 @@
 #==============================================================================
+#                                 Package Methods
+#==============================================================================
+
+#------------------------------ CSV Write Method ------------------------------
+def write_system(system, file_name):
+    """Write a system of bodies to a CSV file.
+    
+    Method Arguments:
+    * system: A list of bodies
+    * file_name: A path and file name to save thae data into. (Example: Data/System.csv)
+
+    Output:
+    * None
+    """
+    import csv
+    
+    with open(file_name, 'w', newline=',') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.
+        for i in range(0, len(system)):
+            writer.writerow
+            
+    
+
+
+
+#==============================================================================
 #                                  Vector3 Class
 #==============================================================================
 class Vector3:
@@ -123,13 +150,20 @@ class Vector3:
         a magnitude of 1.
         """
         import numpy as np
-        component_sum = np.absolute(self.x) + np.absolute(self.y) + \
-        np.absolute(self.z)
-        return Vector3(self.x / component_sum, self.y / component_sum, self.z / 
-                       component_sum)
+        mag = self.magnitude()
+        return Vector3(self.x / mag, self.y / mag, self.z / mag)
 
+    def magnitude(self):
+        """Return the magnitude of this vector
+        
+        Method Arguments:
+        * None
 
-
+        Output:
+        * The magnitude of this Vector3.
+        """
+        import numpy as np
+        return( np.sqrt( ( self.x ** 2 ) + ( self.y ** 2 ) + ( self.z ** 2) ) ) 
 
 
 #==============================================================================
@@ -258,8 +292,10 @@ class Planetary_Body:
                 F = ( ( G * m1 * m2 ) / np.pow( r, 2 ) )
             
             # Apply force on both bodies toward each other
-            body1.apply_force(F * (body1 - body2).normalize(), delta_time)
-            body2.apply_force(F * (body2 - body1).normalize(), delta_time)    
+            body1.apply_force(F * (body1.pos - body2.pos).normalize(), \
+                              delta_time)
+            body2.apply_force(F * (body2.pos - body1.pos).normalize(), \
+                              delta_time)    
         
         # One of the parametes was not a body
         else:
