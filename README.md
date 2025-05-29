@@ -27,7 +27,7 @@ Implements class that manages the overall N-body system and its evolution over t
 
 ## Body.py
 
-Body.py implements two classes, Vector3 and Planetary_Body. VEctor3 has methods implementing basic arithmentic operations as well as other helpful Vector operations such as Normalization. The Planetary_Body class has 4 attributes; name (string), position (Vector3), velocity (Vector3), and mass (float). This class also contains functions for applying forces on bodies, updating their position, and finding the distance between two bodies. Utilizes Gravity equation uses the universal law of gravitation. Body.py will be used by both Simulation.py and Driver.py.
+Body.py implements two classes, Vector3 and Planetary_Body. Vector3 holds 3 values that describe the x, y, and z components of a vector and is primarily used for position and velocity. It has methods implementing basic arithmentic operations as well as other helpful Vector operations such as Normalization. The Planetary_Body class has 4 attributes; name (string), position (Vector3), velocity (Vector3), and mass (float). This class also contains functions for applying forces on bodies, updating their position, and finding the distance between two bodies. Utilizes Gravity equation uses the universal law of gravitation. Body.py will be used by both Simulation.py and Driver.py.
 
 ## Visualization.py
 File not created.
