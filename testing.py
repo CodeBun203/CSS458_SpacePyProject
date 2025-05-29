@@ -1,30 +1,9 @@
 '''
-testing.py
-
-    We wanted this file to help us handle calculation verification within
-    our model. It will ensure we designed all the behaviors and implementations
-    correctly and catch any critical errors. 
-
-    What this file is verifying:
-    - Gravitational Physics
-        * Force Symmetric
-        * Zero Distance
-
-    - Lagrange Points
-        * L4 (weakest) Point Stability
-
-    - Elliptical Orbit
-        * Orbit Consistency
-    
-    - Simulation Integration
-        * Can our simulation file run our model without any issues?
-
     Note:
         There are certain files that have not been created, or added, yet. Some tests were
         written with the assumption to be uncommented out once those files have been imported
         into this file. 
 '''
-
 
 import numpy as np
 import unittest as ut

@@ -1,10 +1,4 @@
 '''
-driver.py
-
-    For this file, it will be the drive all the files within our model.
-    The purpose is to handle validation while checking the model's behavior and
-    physics during simulation and calculation. 
-
     Note:
         This file was written assuming all files are completed. 
         Everything that is commented out is there for when those files are
