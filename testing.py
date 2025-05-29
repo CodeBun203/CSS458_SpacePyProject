@@ -1,25 +1,42 @@
+'''
+testing.py
+
+    We wanted this file to help us handle calculation verification within
+    our model. It will ensure we designed all the behaviors and implementations
+    correctly and catch any critical errors. 
+
+    What this file is verifying:
+    - Gravitational Physics
+        * Force Symmetric
+        * Zero Distance
+
+    - Lagrange Points
+        * L4 (weakest) Point Stability
+
+    - Elliptical Orbit
+        * Orbit Consistency
+    
+    - Simulation Integration
+        * Can our simulation file run our model without any issues?
+
+    Note:
+        There are certain files that have not been created, or added, yet. Some tests were
+        written with the assumption to be uncommented out once those files have been imported
+        into this file. 
+'''
+
+
 import numpy as np
 import unittest as ut
 import os
 import csv
-
-'''
-This is all subject to change. This is just a base.  - Avah
-
-This is where the import of the files would be added in.
-For example:
-from simulation import Body, Simulator, calculate_gravitational_force, calculate_lagrange_point
-'''
+#from body import Planetary_Body, Vector3
+#from simulation import simulation as sim
 
 # Placeholder constants
 DRIFT_TOLERANCE = 0.05  # in AU
 
-"""
-TestGravitationalPhysics class includes testing:
-* Gravitational forces are symmetric with positive and negative distance.
-* Division by zero rasing an error
 
-"""
 class TestGravitationalPhysics(ut.TestCase):
     def test_force_symmetric(self):
   
@@ -34,12 +51,7 @@ class TestGravitationalPhysics(ut.TestCase):
             calculate_gravitational_force(5, 5, 0)
 
 
-"""
-TestGravitationalPhysics class includes testing:
-* Gravitational forces are symmetric with positive and negative distance.
-* Division by zero rasing an error
 
-"""
 class TestLagrangePoints(ut.TestCase):
     def setUp(self):
         from simulation import Body, Simulator
@@ -61,6 +73,7 @@ class TestLagrangePoints(ut.TestCase):
         self.assertLess(drift, DRIFT_TOLERANCE, "Probe drifted too far from Lagrange point")
 
 
+
 class TestOrbitalBehavior(ut.TestCase):
     def setUp(self):
         from simulation import Body, Simulator
@@ -75,6 +88,8 @@ class TestOrbitalBehavior(ut.TestCase):
 
         displacement = np.linalg.norm(final - initial)
         self.assertLess(displacement, 0.1, "Planet did not return to near starting position")
+
+
 
 
 class TestDataLogging(ut.TestCase):
@@ -94,9 +109,9 @@ class TestDataLogging(ut.TestCase):
         os.remove("test_output.csv")
 
 
+''' ~{}~~~~~~~~~~~~Uncomment me out~~~~~~~~~~~~~~~{}~~
 class TestSimIntegration(ut.TestCase):
     def test_simulation_runs(self):
-        from simulation import Body, Simulator
         sun = Body("Sun", 1.0, [0, 0, 0], [0, 0, 0])
         earth = Body("Earth", 3e-6, [1, 0, 0], [0, 30, 0])
         sim = Simulator([sun, earth])
@@ -105,7 +120,7 @@ class TestSimIntegration(ut.TestCase):
             sim.run(100)
         except Exception as e:
             self.fail(f"Simulation failed with error: {e}")
-
+~{}~~~~~~~~~~~~Uncomment me out~~~~~~~~~~~~~~~{}~~ '''
 
 if __name__ == '__main__':
     ut.main()
