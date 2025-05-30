@@ -8,7 +8,8 @@ def write_system(system, file_name):
     
     Method Arguments:
     * system: A list of bodies
-    * file_name: A path and file name to save thae data into. (Example: Data/System.csv)
+    * file_name: A path and file name to save thae data into. (Example: 
+      Data/System.csv).
 
     Output:
     * None
@@ -17,11 +18,133 @@ def write_system(system, file_name):
     
     with open(file_name, 'w', newline=',') as csvfile:
         writer = csv.writer(csvfile)
-        writer.
+        # Write a header
+        writer.writerow(['Name', 'Mass', 'Pos.x', 'Pos.y', 'Pos.z', 'Vel.x', \
+                         'Vel.y', 'Vel.z'])
+        # Write the system
         for i in range(0, len(system)):
-            writer.writerow
-            
+            writer.writerow(system[i].as_type_list())
+
+
+
+#------------------------------ CSV Read Method -------------------------------
+def read_system(file_name):
+    """Write a system of bodies to a CSV file.
     
+    Method Arguments:
+    * file_name: A path and file name to read thae data from. (Example: 
+      Data/System.csv).
+
+    Output:
+    * A list of bodies that were stored in the file
+    """
+    import csv
+    
+    with open(file_name, newline=',') as csvfile:
+        reader = csv.reader(csvfile)
+        # Skip the header
+        next(reader) 
+        # Read the system
+        system = []
+        for row in reader:
+            if(len(row) >= 8):
+                new_name = row[0]
+                new_mass = row[1]
+                new_pos = Vector3(row[2], row[3], row[4])
+                new_vel = Vector3(row[5], row[6], row[7])
+                new_body = Planetary_Body(new_mass, new_pos, new_vel, new_name)
+                system.append(new_body)
+            else:
+                print("Encountered a row with too little data to make a body")
+                print(row)
+        return system
+
+
+
+#-------------------------- Body Gravitational Force --------------------------
+def get_gravitatonal_force(body1, body2, delta_time):
+    """Get the gravitational force between 2 bodies based on the elasped 
+    time.
+    
+    Method Arguments:
+    * body1: The first body. Must be of the Planetary_Body class.
+    * body2: The second body. Must be of the Planetary_Body class.
+    * delta_time: The time since the previous call in months.
+
+    Output:
+    * None
+
+    Uses the law of universal gravitation to determine the force applied to 
+    both bodies.
+    """
+    if isinstance(Planetary_Body(), body1) \
+    and isinstance(Planetary_Body(), body2):
+        import scipy.constants as sp
+        import numpy as np
+        
+        # Law of Universal Gravitaion Variables
+        m1 = body1.mass
+        m2 = body2.mass
+        G = sp.gravitational_constant
+        r = Planetary_Body.get_body_distance(body1, body2)
+        
+        # Handle case of 2 bodies at the same position
+        if np.isclose(r, 0.0):
+            F = 0.0
+        # Law of Universal Gravitaion Equation
+        else:
+            F = ( ( G * m1 * m2 ) / np.pow( r, 2 ) )
+        
+        # Return the force
+        return F  
+    
+    # One of the parametes was not a body
+    else:
+        if not isinstance(Planetary_Body(), body1):
+            raise ValueError("get_attraction_force(body1, body2) " + \
+                             "requires that the first parameter be of " + \
+                                 "type Planetary_Body")
+        else:
+            raise ValueError("get_attraction_force(body1, body2) " + \
+                             "requires that the second parameter be of" + \
+                                 " type Planetary_Body")
+
+
+
+#------------------------------- Body Distance --------------------------------
+def get_body_distance(body1, body2):
+    """Find the distance between 2 bodies
+    
+    Method Arguments:
+    * body1: The first body. Must be of the Planetary_Body class.
+    * body2: The second body. Must be of the Planetary_Body class.
+
+    Output:
+    * The distance between the 2 bodies in AUs.
+    
+    Will raise an error if either of the arguments are not of the 
+    Planetary_Body class.
+    """
+    if isinstance(Planetary_Body(), body1) \
+    and isinstance(Planetary_Body(), body2):
+        import numpy as np
+        componenets = body1 - body2
+        distance = np.sqrt(np.pow(componenets.x, 2) + \
+                           np.pow(componenets.y, 2) + \
+                           np.pow(componenets.z, 2))
+        return distance
+    # One of the parametes was not a body
+    else:
+        if not isinstance(Planetary_Body(), body1):
+            raise ValueError("get_body_distance(body1, body2) requires" + \
+                             " that the first parameter be of type " + \
+                             "Planetary_Body")
+        else:
+            raise ValueError("get_body_distance(body1, body2) requires" + \
+                             " that the second parameter be of type " + \
+                             "Planetary_Body")
+
+
 
 
 
@@ -149,7 +272,6 @@ class Vector3:
         Returns a new Vector3 with the same direction as this vector, but with 
         a magnitude of 1.
         """
-        import numpy as np
         mag = self.magnitude()
         return Vector3(self.x / mag, self.y / mag, self.z / mag)
 
@@ -164,6 +286,9 @@ class Vector3:
         """
         import numpy as np
         return( np.sqrt( ( self.x ** 2 ) + ( self.y ** 2 ) + ( self.z ** 2) ) ) 
+
+
+
 
 
 #==============================================================================
@@ -197,38 +322,21 @@ class Planetary_Body:
     
     
     
-    #----------------------------- Getter Methods -----------------------------
-    def get_body_distance(body1, body2):
-        """Find the distance between 2 bodies
+    #----------------------------- Getter Methods -----------------------------    
+    def as_type_list(self):
+        """Get the body data as a list.
         
         Method Arguments:
-        * body1: The first body. Must be of the Planetary_Body class.
-        * body2: The second body. Must be of the Planetary_Body class.
+        * None
 
         Output:
-        * The distance between the 2 bodies in AUs.
+        * The body class as a list.
         
-        Will raise an error if either of the arguments are not of the 
-        Planetary_Body class.
+        Values are in the order of Name, Mass, Pos.x, Pos.y, Pos.z, Vel.x, 
+        Vel.y, Vel.z.
         """
-        if isinstance(Planetary_Body(), body1) \
-        and isinstance(Planetary_Body(), body2):
-            import numpy as np
-            componenets = body1 - body2
-            distance = np.sqrt(np.pow(componenets.x, 2) + \
-                               np.pow(componenets.y, 2) + \
-                               np.pow(componenets.z, 2))
-            return distance
-        # One of the parametes was not a body
-        else:
-            if not isinstance(Planetary_Body(), body1):
-                raise ValueError("get_body_distance(body1, body2) requires" + \
-                                 " that the first parameter be of type " + \
-                                 "Planetary_Body")
-            else:
-                raise ValueError("get_body_distance(body1, body2) requires" + \
-                                 " that the second parameter be of type " + \
-                                 "Planetary_Body")
+        return [self.name, self.mass, self.pos.x, self.pos.y, self.pos.z, \
+                self.velocity.x, self.velocity.y, self.velocity.z]
     
     
     
@@ -245,68 +353,30 @@ class Planetary_Body:
         self.pos = self.pos + (self.velocity * delta_time * \
         Planetary_Body.km_per_s_to_AU_per_month)
         
-    def apply_force(self, force_vector):
+    def apply_force(self, force_vector, delta_time):
         """Apply a force on the body.
         
         Method Arguments:
         * force_vector: the force direction and magnitude.
+        * delta_time: the time since the previous call in months.
 
         Output:
         * None
         
-        Adds the force to the velocity.
-        """
-        self.velocity = self.velocity + force_vector
-    
-    def apply_gravitatonal_force(body1, body2, delta_time):
-        """Apply the gravitational force between 2 bodies based on the elasped 
-        time.
+        Uses Newton's second law of motion, calculates the accelration vector 
+        applied to the body.
         
-        Method Arguments:
-        * body1: The first body. Must be of the Planetary_Body class.
-        * body2: The second body. Must be of the Planetary_Body class.
-        * delta_time: The time since the previous call in months.
-
-        Output:
-        * None
-
-        Uses the law of universal gravitation to determine the force applied to 
-        both bodies.
-        """
-        if isinstance(Planetary_Body(), body1) \
-        and isinstance(Planetary_Body(), body2):
-            import scipy.constants as sp
-            import numpy as np
+            Force = Mass * Acceleration -> Acceleration = Force / Mass
             
-            # Law of Universal Gravitaion Variables
-            m1 = body1.mass
-            m2 = body2.mass
-            G = sp.gravitational_constant
-            r = Planetary_Body.get_body_distance(body1, body2)
-            
-            # Handle case of 2 bodies at the same position
-            if np.isclose(r, 0.0):
-                F = 0.0
-            # Law of Universal Gravitaion Equation
-            else:
-                F = ( ( G * m1 * m2 ) / np.pow( r, 2 ) )
-            
-            # Apply force on both bodies toward each other
-            body1.apply_force(F * (body1.pos - body2.pos).normalize(), \
-                              delta_time)
-            body2.apply_force(F * (body2.pos - body1.pos).normalize(), \
-                              delta_time)    
+        Acceleration is then used in the following kinematic equation to get 
+        the change in the body's velocity.
         
-        # One of the parametes was not a body
-        else:
-            if not isinstance(Planetary_Body(), body1):
-                raise ValueError("get_attraction_force(body1, body2) " + \
-                                 "requires that the first parameter be of " + \
-                                     "type Planetary_Body")
-            else:
-                raise ValueError("get_attraction_force(body1, body2) " + \
-                                 "requires that the second parameter be of" + \
-                                     " type Planetary_Body")
+            Velocity = Initial velocity + Acceleration * Duration of Force
+            
+        
+        """
+        acceleration = force_vector / self.mass
+        self.velocity = self.velocity + (acceleration * delta_time)
 
 
 
@@ -316,4 +386,19 @@ class Planetary_Body:
 #                                  Test Code
 #==============================================================================
 if __name__ == "__main__":
-    print("Tests still need to be designed")
+    print("Tests still need to be designed.")
+    print("Vector class:")
+    print("1. Vector math functions")
+    print("2. Vector magnitude")
+    print("3. Vector normalization")
+    print()
+    print("Body Class:")
+    print("1. Apply force")
+    print("2. Update position")
+    print("3. As type list")
+    print()
+    print("Package Functions:")
+    print("1. Body distance")
+    print("2. Gravitational Force")
+    print("4. Write CSV")
+    print("5. Read CSV")
