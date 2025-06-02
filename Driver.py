@@ -1,41 +1,14 @@
 # Driver.py
-# This script sets up and runs the N-body planetary simulation.
 from Body import Planetary_Body, Vector3
 from Simulation import Simulation 
-# visualizer.py is assumed to be the same as the original version that works with NumPy arrays
-from Visualizer import animate_simulation 
-
-def get_km_s_to_au_day_conversion_factor():
-    """
-    Calculates and returns the conversion factor from km/s to AU/day.
-    1 km = 1 / 149,597,870.7 AU
-    1 s = 1 / (24 * 60 * 60) day
-    """
-    AU_IN_KM = 149597870.7  # Kilometers in one Astronomical Unit
-    SECONDS_IN_DAY = 24.0 * 60.0 * 60.0
-    return (1.0 / AU_IN_KM) * SECONDS_IN_DAY
+from Visualizer import animate_simulation
 
 def main():
-    """
-    Main function to define initial conditions, set up the simulation,
-    run it, and then visualize the results.
-    """
-    # --- Simulation Parameters ---
-    SIMULATION_DURATION_YEARS = 2.0  # Total duration of the simulation in years
-    TIME_STEP_DAYS = 1.0             # Duration of each simulation step in days
+    SIMULATION_DURATION_YEARS = 10.0  # Total duration in years
+    TIME_STEP_MONTHS = .1           # Simulation time step in months (e.g., 0.1 months ~ 3 days)
+                                     # Or use daily steps: (1.0 / (365.25 / 12.0)) for 1 day in months
 
-    # --- Initial Conditions for Solar System Bodies ---
-    # Date is approximately for January 1, 2025.
-    # Units:
-    #   Mass: Earth Masses (MEarth)
-    #   Position: Astronomical Units (AU) from the Sun (assumed at origin for initial setup)
-    #   Velocity: km/s (this will be converted to AU/day for consistency with Body.py)
-    
-    # Get the conversion factor using the helper function
-    KM_PER_SECOND_TO_AU_PER_DAY = get_km_s_to_au_day_conversion_factor()
-
-    # Data for the bodies
-    # Note: For a more accurate simulation, initial positions and velocities 
+    # Initial Conditions: Mass in Earth Masses, Position in AU, Velocity in km/s
     solar_system_initial_data = [
         {'name': 'Sun',     'mass_MEarth': 333000.0, 'pos_AU_components': [0.0, 0.0, 0.0],       'vel_km_s_components': [0.0, 0.0, 0.0]},
         {'name': 'Mercury', 'mass_MEarth': 0.0553,   'pos_AU_components': [-0.177, -0.428, -0.046],  'vel_km_s_components': [36.2, -15.8, -4.4]},
@@ -48,44 +21,39 @@ def main():
         {'name': 'Neptune', 'mass_MEarth': 17.1,     'pos_AU_components': [29.9, -1.06, -0.58],  'vel_km_s_components': [0.1, 5.4, -0.08]}
     ]
 
-    # Create a list of Planetary_Body objects from the initial data
     list_of_bodies = []
     for body_data in solar_system_initial_data:
-
-        pos_components = body_data['pos_AU_components']
-        position_vector = Vector3(pos_components[0], pos_components[1], pos_components[2])
+        pos_vec = Vector3(*body_data['pos_AU_components'])
+        vel_vec_kms = Vector3(*body_data['vel_km_s_components'])
         
-        vel_components_km_s = body_data['vel_km_s_components']
-        velocity_vector_AU_day = Vector3(
-            vel_components_km_s[0] * KM_PER_SECOND_TO_AU_PER_DAY,
-            vel_components_km_s[1] * KM_PER_SECOND_TO_AU_PER_DAY,
-            vel_components_km_s[2] * KM_PER_SECOND_TO_AU_PER_DAY
-        )
-        
-        # Create the Planetary_Body instance
         planet = Planetary_Body(
             mass_val=body_data['mass_MEarth'],
-            pos_vector=position_vector,
-            vel_vector=velocity_vector_AU_day,
+            pos_vector=pos_vec,
+            vel_vector=vel_vec_kms,
             name_val=body_data['name']
         )
         list_of_bodies.append(planet)
 
-    # --- Setup and Run the Simulation ---
-    # Instantiate the Simulation class with the list of bodies and the time step
     simulation_instance = Simulation(
         list_of_planetary_bodies=list_of_bodies,
-        time_step_days=TIME_STEP_DAYS
+        time_step_months=TIME_STEP_MONTHS
     )
 
-    # Run the simulation
-    # The run_simulation method returns a NumPy array of position history
+    print(f"Starting simulation from Driver.py (duration: {SIMULATION_DURATION_YEARS} years, step: {TIME_STEP_MONTHS:.4f} months)...")
     position_history_array = simulation_instance.run_simulation(
         total_duration_years=SIMULATION_DURATION_YEARS
     )
+    print("Simulation finished.")
 
-    # --- Visualize the Results ---
-    # Complete this section to visualize the simulation results
+    print("\nFinal states of bodies (Pos in AU, Vel in km/s):")
+    for body in simulation_instance.bodies:
+        print(body)
+    
+    # Visualization
+    print("Attempting to animate simulation...")
+    body_names = [body.name for body in simulation_instance.bodies]
+    body_masses = [body.mass for body in simulation_instance.bodies]
+    animate_simulation(position_history_array, body_names, body_masses)
 
 if __name__ == '__main__':
     main()
