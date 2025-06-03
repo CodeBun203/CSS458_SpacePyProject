@@ -361,6 +361,43 @@ class Planetary_Body:
         force_scalar_part = G_ASTRO_MONTHS * acting_body.mass * target_body.mass / (dist * dist_sq)
         force_vector = r_vector * force_scalar_part
         return force_vector
+    
+    def calculate_gravity_field(exerting_body, target_body):
+        """Returns the acceleration due to gravity an exerting object applies 
+        to a target object.
+        
+        Method Arguments:
+        * exerting_body: the body applying the force
+        * target_body: the body being pulled
+
+        Output:
+        * The acceleration due to Gravity experienced by the target body.
+        
+        Uses the Gravitational Field Equation, which derives from Netwon's Law 
+        Universal Gravitation and Newton's second law of Motion.
+        
+        G = Gravitational Constant
+        r = distance between planets' center of mass
+        M = mass of the exerting body
+        a = Acceleration due to gravity
+
+        a = ( G * M ) / r^2
+        """
+        import scipy.constants as sp
+        
+        # Gravitational Field Vars
+        G = sp.gravitational_constant
+        r = get_body_distance(target_body, exerting_body)
+        
+        #Gravitational Field Equation
+        # By dividing the gravitational force by an extra r, we don't have to 
+        # divide the distance by r to get the direction of the acceleration
+        grav_force_div_r = G * exerting_body.mass / r**3
+        
+        # Find the displacement of the bodies or (direction * r)
+        accel = (exerting_body.pos - target_body.pos) * grav_force_div_r
+        
+        return accel
 
 #----------------------------- Getter Methods -----------------------------    
     def as_type_list(self): 
