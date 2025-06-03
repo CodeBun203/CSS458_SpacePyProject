@@ -145,13 +145,13 @@ def get_body_distance(body1, body2):
     Will raise an error if either of the arguments are not of the 
     Planetary_Body class.
     """
-    if isinstance(Planetary_Body(), body1) \
-    and isinstance(Planetary_Body(), body2): 
+    if isinstance(body1, Planetary_Body) \
+    and isinstance(body2, Planetary_Body): 
         import numpy as np 
-        componenets = body1 - body2 # There is no subtraction operator for Planetary_Body
-        distance = np.sqrt(np.pow(componenets.x, 2) + \
-                           np.pow(componenets.y, 2) + \
-                           np.pow(componenets.z, 2))
+        componenets = body1.pos - body2.pos # There is no subtraction operator for Planetary_Body
+        distance = np.sqrt((componenets.x ** 2) + \
+                           (componenets.y ** 2) + \
+                           (componenets.z ** 2))
         return distance
     # One of the parametes was not a body
     else:
@@ -387,29 +387,29 @@ class Planetary_Body:
         
         for index, external_body in enumerate(system):
             if index != body_index:
-                r = Planetary_Body.get_body_distance(self, external_body)
+                r = get_body_distance(self, external_body)
                 # Not sure if it should be r**2 or r**3
                 temp = G * external_body.mass / r**3 
                 
                 #k1 - Euler's method
-                k1 = temp * (external_body.pos - self.pos)
+                k1 = (external_body.pos - self.pos) * temp
                 
                 #k2 - accelration 0.5 timesteps in the future based on k1
                 #acceleration
                 temp_vel = partial_step(self.velocity, k1, 0.5)
                 temp_loc= partial_step(self.pos, temp_vel, 0.5 * delta_time)
-                k2 = temp * (external_body.pos - temp_loc)
+                k2 = (external_body.pos - temp_loc) * temp
                 
                 #k3 - acceleration 0.5 timestemps in the future using k2 
                 #acceleration
                 temp_vel = partial_step(self.velocity, k2, 0.5)
                 temp_loc= partial_step(self.pos, temp_vel, 0.5 * delta_time)
-                k3 = temp * (external_body.pos - temp_loc)
+                k3 = (external_body.pos - temp_loc) * temp
                 
                 #k4 - location 1 timestep in the future using k3 acceleration
                 temp_vel = partial_step(self.velocity, k3, 1)
                 temp_loc= partial_step(self.pos, temp_vel, delta_time)
-                k4 = temp * (external_body.pos - temp_loc)
+                k4 = (external_body.pos - temp_loc) * temp
                 
                 #calculate the acceleration
                 accel = accel + ((k1 + (k2 * 2) + (k3 * 2) + k4) / 6)

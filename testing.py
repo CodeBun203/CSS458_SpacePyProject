@@ -134,26 +134,26 @@ class TestVectorClass(ut.TestCase):
 
 class TestBody(ut.TestCase):
     def test_update_pos(self):
-            body = Planetary_Body("Test", 1.0, Vector3(0, 0, 0), Vector3(1, 1, 1))
+            body = Planetary_Body(1.0, Vector3(0, 0, 0), Vector3(1, 1, 1), "Test")
             dt = 1.0  # 1 second
-            body.update(dt)
+            body.update_pos(dt)
 
             expected_position = Vector3(1, 1, 1)
 
             pos_pass = (
-                m.isclose(body.position.x, expected_position.x) and
-                m.isclose(body.position.y, expected_position.y) and
-                m.isclose(body.position.z, expected_position.z)
+                m.isclose(body.pos.x, expected_position.x) and
+                m.isclose(body.pos.y, expected_position.y) and
+                m.isclose(body.pos.z, expected_position.z)
             )
 
             if pos_pass:
                 print("\nTest Update Position: Passed")
             else:
                 print("\nTest Update Position: Failed")
-                print(f"Expected Position: {expected_position}\nGot: {body.position}")
+                print(f"Expected Position: {expected_position}\nGot: {body.pos}")
           
     def test_asType_list(self):
-        body = Planetary_Body("Test", 1.0, Vector3(1, 2, 3), Vector3(4, 5, 6))
+        body = Planetary_Body(1.0, Vector3(1, 2, 3), Vector3(4, 5, 6), "Test")
         result = body.as_type_list()
         expected = [1, 2, 3, 4, 5, 6]
 
@@ -164,10 +164,11 @@ class TestBody(ut.TestCase):
             print(f"Expected: {expected}\nGot: {result}")
                 
     def test_grav_accel_RK4(self):
-        body1 = Planetary_Body("Earth", 5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0))
-        body2 = Planetary_Body("Moon", 7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0))
-
-        accel = body1.compute_gravitational_acceleration_rk4([body2])
+        body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
+        body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0), "Moon")
+        system = [body1, body2]
+        timeStep = 1;
+        accel = body1.get_gravitatonal_acceleration_rk4(0, system, timeStep)
 
         G = 6.67430e-11
         r = 384400000
@@ -187,8 +188,8 @@ class TestBody(ut.TestCase):
             print(f"Expected: {expected_accel}\nGot: {accel}")
 
     def test_grav_force_extert_cal(self):
-        body1 = Planetary_Body("Earth", 5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0))
-        body2 = Planetary_Body("Moon", 7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0))  # 384,400 km away
+        body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
+        body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0), "Moon")  # 384,400 km away
 
         result_force = body1.exert_gravitational_force(body2)
 
