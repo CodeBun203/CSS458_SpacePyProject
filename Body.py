@@ -483,12 +483,6 @@ class Planetary_Body:
 #                                  Test Code
 #==============================================================================
 if __name__ == "__main__": 
-    print("Body Class:")
-    print("1. Apply force")
-    print("2. Update position")
-    print("3. As type list")
-    print("4. Get Gravitatonal Acceleration RK4")
-    print()
     print("Package Functions:")
     print("1. Body distance")
     print("2. Gravitational Force Euler")
