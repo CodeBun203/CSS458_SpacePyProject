@@ -2,20 +2,131 @@
     Note:
         There are certain files that have not been created, or added, yet. Some tests were
         written with the assumption to be uncommented out once those files have been imported
-        into this file. 
-'''
+        into this file.
 
+        Current classes that are finished testing:
+        Vector3
+''' 
 import numpy as np
+import math as m
 import unittest as ut
 import os
 import csv
-#from body import Planetary_Body, Vector3
-#from simulation import simulation as sim
+from Body import Planetary_Body, Vector3
+#import Simulation
 
 # Placeholder constants
 DRIFT_TOLERANCE = 0.05  # in AU
 
+class TestVectorClass(ut.TestCase):
+    def test_vector_math_func(self):
+        
+#~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
+        f1 = Vector3(5, 5, 2)
+        f2 = Vector3(5, 5, 2)
+        f3 = Vector3(3, 3, 2)
+        scalar = 2.0
 
+#These need to be adjusted based on the numbers above
+
+        result_add = f1.__add__(f2)
+        result_sub = f1.__sub__(f3)
+        result_mul = f1.__mul__(scalar)
+        result_div = f1.__truediv__(scalar)
+#~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
+
+#Testing Addition
+        expected_add = f1 + f2
+
+        add_= (m.isclose(result_add.x, expected_add.x) and
+                  m.isclose(result_add.y, expected_add.y) and
+                  m.isclose(result_add.z, expected_add.z))
+        
+        if add_ :
+            print("\nTest Vector Math Function (Addition): Passed")
+        else:
+            print("\nTest Vector Math Function (Addition): Failed\n")
+            print(f"Input Values: \nf1 = {f1} \nf2 = {f2}")
+            print(f"\nExpected: \n{expected_add} \nGot: {result_add}")
+
+#Testing Multiplication
+        expected_mul = f1 * scalar
+
+        mul_= (m.isclose(result_mul.x, expected_mul.x) and
+                  m.isclose(result_mul.y, expected_mul.y) and
+                  m.isclose(result_mul.z, expected_mul.z))
+        
+        if mul_ :
+            print("\nTest Vector Math Function (Multiplication): Passed")
+        else:
+            print("\nTest Vector Math Function (Multiplication): Failed\n")
+            print(f"Input Values: \nf1 = {f1} \nf2 = {f2}")
+            print(f"\nExpected: \n{expected_mul} \nGot: {result_mul}")
+
+#Testing Subtraction
+        expected_sub = f1 - f3
+
+        sub_= (m.isclose(result_sub.x, expected_sub.x) and
+                  m.isclose(result_sub.y, expected_sub.y) and
+                  m.isclose(result_sub.z, expected_sub.z))
+        
+        if sub_ :
+            print("\nTest Vector Math Function (Subtraction): Passed")
+        else:
+            print("\nTest Vector Math Function (Subtraction): Failed\n")
+            print(f"Input Values: \nf1 = {f1} \nf2 = {f2}")
+            print(f"\nExpected: \n{expected_sub} \nGot: {result_sub}")
+
+
+#Testing True Division
+        expected_div = f1 / scalar
+
+        div_= (m.isclose(result_div.x, expected_div.x) and
+                  m.isclose(result_div.y, expected_div.y) and
+                  m.isclose(result_div.z, expected_div.z))
+        
+        if div_ :
+            print("\nTest Vector Math Function (True Division): Passed")
+        else:
+            print("\nTest Vector Math Function (True Division): Failed\n")
+            print(f"Input Values: \nf1 = {f1} \nf2 = {f2}")
+            print(f"\nExpected: \n{expected_div} \nGot: {result_div}")
+
+    def test_vector_mag_and_norm(self):
+       
+#~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
+        f1 = Vector3(3, 4, 10)
+#~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
+
+        result_mag = f1.magnitude()
+        result_norm = f1.normalize()
+
+        expected_mag = m.sqrt(f1.x**2 + f1.y**2 + f1.z**2)
+
+        if expected_mag != 0:
+            expected_norm = Vector3(f1.x / expected_mag, f1.y / expected_mag, f1.z / expected_mag)
+        else:
+            expected_norm = Vector3(0,0,0)
+       
+        mag_pass = m.isclose(result_mag, expected_mag)
+        norm_pass = (
+            m.isclose(result_norm.x, expected_norm.x) and
+            m.isclose(result_norm.y, expected_norm.y) and
+            m.isclose(result_norm.z, expected_norm.z)
+        )
+
+        if mag_pass and norm_pass :
+            print("\nTest Vector Magnitude and Normalization: Passed")
+        else:
+            print("\nTest Vector Magnitude and Normalization: Failed\n")
+            print(f"Input Values: \nf1 = {f1}")
+            print(f"\nExpected Magnitude: \n{expected_mag} \nGot: {result_mag}")
+            print(f"\nExpected Normalization: \n{expected_norm} \nGot: {result_norm}")
+
+class TestBody(ut.TestCase):
+    def test_grav_force_extert_cal(self):
+
+'''
 class TestGravitationalPhysics(ut.TestCase):
     def test_force_symmetric(self):
   
@@ -86,20 +197,6 @@ class TestDataLogging(ut.TestCase):
             self.assertEqual(headers, expected)
 
         os.remove("test_output.csv")
-
-
-''' ~{}~~~~~~~~~~~~Uncomment me out~~~~~~~~~~~~~~~{}~~
-class TestSimIntegration(ut.TestCase):
-    def test_simulation_runs(self):
-        sun = Body("Sun", 1.0, [0, 0, 0], [0, 0, 0])
-        earth = Body("Earth", 3e-6, [1, 0, 0], [0, 30, 0])
-        sim = Simulator([sun, earth])
-
-        try:
-            sim.run(100)
-        except Exception as e:
-            self.fail(f"Simulation failed with error: {e}")
-~{}~~~~~~~~~~~~Uncomment me out~~~~~~~~~~~~~~~{}~~ '''
-
+'''
 if __name__ == '__main__':
     ut.main()

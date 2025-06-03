@@ -483,12 +483,6 @@ class Planetary_Body:
 #                                  Test Code
 #==============================================================================
 if __name__ == "__main__": 
-    print("Tests still need to be designed.") # Original print statements
-    print("Vector class:")
-    print("1. Vector math functions")
-    print("2. Vector magnitude")
-    print("3. Vector normalization")
-    print()
     print("Body Class:")
     print("1. Apply force")
     print("2. Update position")
