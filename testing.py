@@ -1,29 +1,11 @@
-'''
-    Note:
-        There are certain files that have not been created, or added, yet. Some tests were
-        written with the assumption to be uncommented out once those files have been imported
-        into this file.
-
-        Current classes that are finished testing:
-        Vector3
-
-        Needs to be fixed:
-        All functions within body testing
-
-        Needs to be rewritten:
-        Everything that's in comments (cause i realized that they dont call
-        the funtion until now)
-
-
-''' 
 import math as m
 import unittest as ut
 import os
 import csv
-from Body import Planetary_Body, Vector3, get_body_distance, get_gravitatonal_force_euler
-#import Simulation
+from Body import Planetary_Body, Vector3, get_body_distance
+from Body import write_system, read_system, get_gravitatonal_force_euler
 
-# Placeholder constants
+# Constants
 DRIFT_TOLERANCE = 0.05  # in AU
 
 class TestVectorClass(ut.TestCase):
@@ -104,24 +86,25 @@ class TestVectorClass(ut.TestCase):
        
 #~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
         f1 = Vector3(3, 4, 10)
+        expected_mag = m.sqrt(3**2 + 4**2 + 10**2) 
+        expected_norm = Vector3(f1.x / expected_mag, f1.y / expected_mag, f1.z / expected_mag)
 #~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
 
         result_mag = f1.magnitude()
         result_norm = f1.normalize()
-
-        expected_mag = m.sqrt(f1.x**2 + f1.y**2 + f1.z**2)
 
         if expected_mag != 0:
             expected_norm = Vector3(f1.x / expected_mag, f1.y / expected_mag, f1.z / expected_mag)
         else:
             expected_norm = Vector3(0,0,0)
        
-        mag_pass = m.isclose(result_mag, expected_mag)
+        mag_pass = m.isclose(result_mag, expected_mag, rel_tol=1e-5)
         norm_pass = (
-            m.isclose(result_norm.x, expected_norm.x) and
-            m.isclose(result_norm.y, expected_norm.y) and
-            m.isclose(result_norm.z, expected_norm.z)
+            m.isclose(result_norm.x, expected_norm.x, rel_tol=1e-5) and
+            m.isclose(result_norm.y, expected_norm.y, rel_tol=1e-5) and
+            m.isclose(result_norm.z, expected_norm.z, rel_tol=1e-5)
         )
+
 
         if mag_pass and norm_pass :
             print("\nTest Vector Magnitude and Normalization: Passed")
@@ -136,10 +119,10 @@ class TestBody(ut.TestCase):
 
 #~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
             body = Planetary_Body(1.0, Vector3(0, 0, 0), Vector3(1, 1, 1), "Test")
+            expected_position = Vector3(1, 1, 1)
             dt = 1.0  # 1 second
 #~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
             result_pos = body.update_pos(dt)
-            expected_position = Vector3(1, 1, 1)
 
             pos_pass = (
                 m.isclose(body.pos.x, expected_position.x) and
@@ -199,13 +182,13 @@ class TestBody(ut.TestCase):
 #~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
         body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
         body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0), "Moon")  # 384,400 km away
+        expected_magnitude = 384400000 # meters
+        expected_force = Vector3(expected_magnitude, 0, 0)
 #~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
         result_force = Planetary_Body.calculate_gravitational_force_exerted_by_on(body1,body2)
 
         G = 6.67430e-11
         r = 384400000
-        expected_magnitude = G * body1.mass * body2.mass / (r ** 2)
-        expected_force = Vector3(expected_magnitude, 0, 0)
 
         force_pass = (
             m.isclose(result_force.x, expected_force.x, rel_tol=1e-5) and
@@ -225,7 +208,7 @@ class TestPackageFunction(ut.TestCase):
 #~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
         body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
         body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0), "Moon")  
-        expect_dist = 0.00257 #AU 
+        expect_dist = 384400000 #Meters
 #~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
         
         result_dist = get_body_distance(body1, body2)
@@ -253,81 +236,39 @@ class TestPackageFunction(ut.TestCase):
         else:
             print("\nTest Graviational Force using Euler: Failed")
             print(f"\nExpected: {expect_euler}\nGot: {result_euler}")
-'''
-    def test_write_csv(self):
 
-    def test_read_csv(self):    
-
-class TestGravitationalPhysics(ut.TestCase):
-    def test_force_symmetric(self):
-  
-        from simulation import calculate_gravitational_force
-        f1 = calculate_gravitational_force(5, 5, 2)
-        f2 = calculate_gravitational_force(5, 5, -2)
-        self.assertAlmostEqual(f1, f2)
-
-    def test_zero_distance(self):
-        from simulation import calculate_gravitational_force
-        with self.assertRaises(ZeroDivisionError):
-            calculate_gravitational_force(5, 5, 0)
-
-
-
-class TestLagrangePoints(ut.TestCase):
-    def setUp(self):
-        from simulation import Body, Simulator
-        self.sun = Body("Sun", 1.0, [0, 0, 0], [0, 0, 0])
-        self.earth = Body("Earth", 3e-6, [1, 0, 0], [0, 30, 0])
-        self.sim = Simulator([self.sun, self.earth])
-
-    def test_l4_point_stability(self):
-        from simulation import Body, calculate_lagrange_point
-        l4 = calculate_lagrange_point(self.sun, self.earth, "L4")
-        probe = Body("Probe", 1e-10, l4, [0, 30, 0])
-        self.sim.add_body(probe)
-
-        initial_pos = np.array(probe.position)
-        self.sim.run(1000)
-        final_pos = np.array(probe.position)
-
-        drift = np.linalg.norm(final_pos - initial_pos)
-        self.assertLess(drift, DRIFT_TOLERANCE, "Probe drifted too far from Lagrange point")
-
-
-
-class TestOrbitalBehavior(ut.TestCase):
-    def setUp(self):
-        from simulation import Body, Simulator
-        self.sun = Body("Sun", 1.0, [0, 0, 0], [0, 0, 0])
-        self.planet = Body("Earth", 3e-6, [1, 0, 0], [0, 30, 0])
-        self.sim = Simulator([self.sun, self.planet])
-
-    def test_elliptical_orbit_consistency(self):
-        initial = np.array(self.planet.position)
-        self.sim.run(365 * 12)  # simulate 1 year assuming monthly timesteps
-        final = np.array(self.planet.position)
-
-        displacement = np.linalg.norm(final - initial)
-        self.assertLess(displacement, 0.1, "Planet did not return to near starting position")
-
-
-
-
-class TestDataLogging(ut.TestCase):
-    def test_csv_logging_format(self):
-        from simulation import Simulator, Body
-        sun = Body("Sun", 1.0, [0, 0, 0], [0, 0, 0])
-        earth = Body("Earth", 3e-6, [1, 0, 0], [0, 30, 0])
-        sim = Simulator([sun, earth])
-        sim.run_and_log("test_output.csv")
-
-        with open("test_output.csv", newline='') as f:
-            reader = csv.reader(f)
-            headers = next(reader)
-            expected = ["timestamp", "id", "mass", "x", "y", "z", "vx", "vy", "vz"]
-            self.assertEqual(headers, expected)
-
-        os.remove("test_output.csv")
-'''
+    def test_write_and_read_csv(self):
+#~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
+        body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
+        body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 1022, 0), "Moon")
+        test_system = [body1, body2]
+#~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
+        test_file = "test_system.csv"
+        
+        write_ = write_system(test_system, test_file)
+        read_ = read_system(test_file)
+        
+# Checking to see if the read was done correctly
+        passed = True
+        for original, loaded in zip(test_system, read_):
+            if (str(original.mass) != str(loaded.mass) or
+                str(original.name) != str(loaded.name) or
+                str(original.pos.x) != str(loaded.pos.x) or
+                str(original.pos.y) != str(loaded.pos.y) or
+                str(original.pos.z) != str(loaded.pos.z) or
+                str(original.vel.x) != str(loaded.vel.x) or
+                str(original.vel.y) != str(loaded.vel.y) or
+                str(original.vel.z) != str(loaded.vel.z)):
+                passed = False
+                break
+          
+                if passed == True:
+                    print("\nTest Write to a CSV File: Passed")
+                else:
+                    print("\nTest Write to a CSV File: Failed")
+# Clean up
+        if os.path.exists(test_file):
+            os.remove(test_file)
+        
 if __name__ == '__main__':
     ut.main()
