@@ -97,7 +97,7 @@ def get_gravitatonal_force_euler(body1, body2, delta_time):
         m1 = float(body1.mass) # Ensure float for calculation
         m2 = float(body2.mass) # Ensure float for calculation
         G = sp.gravitational_constant 
-        r_val = Planetary_Body.get_body_distance(body1, body2)
+        r_val = get_body_distance(body1, body2)
 
         # Check if r_val is a number
         if not isinstance(r_val, (int, float)):
