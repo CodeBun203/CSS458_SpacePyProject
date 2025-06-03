@@ -16,12 +16,11 @@
 
 
 ''' 
-import numpy as np
 import math as m
 import unittest as ut
 import os
 import csv
-from Body import Planetary_Body, Vector3
+from Body import Planetary_Body, Vector3, get_body_distance, get_gravitatonal_force_euler
 #import Simulation
 
 # Placeholder constants
@@ -134,10 +133,12 @@ class TestVectorClass(ut.TestCase):
 
 class TestBody(ut.TestCase):
     def test_update_pos(self):
+
+#~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
             body = Planetary_Body(1.0, Vector3(0, 0, 0), Vector3(1, 1, 1), "Test")
             dt = 1.0  # 1 second
-            body.update_pos(dt)
-
+#~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
+            result_pos = body.update_pos(dt)
             expected_position = Vector3(1, 1, 1)
 
             pos_pass = (
@@ -150,12 +151,15 @@ class TestBody(ut.TestCase):
                 print("\nTest Update Position: Passed")
             else:
                 print("\nTest Update Position: Failed")
-                print(f"Expected Position: {expected_position}\nGot: {body.pos}")
+                print(f"Expected Position: {expected_position}\nGot: {result_pos}")
           
     def test_asType_list(self):
+
+#~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
         body = Planetary_Body(1.0, Vector3(1, 2, 3), Vector3(4, 5, 6), "Test")
         result = body.as_type_list()
         expected = [1, 2, 3, 4, 5, 6]
+#~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
 
         if result == expected:
             print("\nTest as_type_list: Passed")
@@ -164,11 +168,14 @@ class TestBody(ut.TestCase):
             print(f"Expected: {expected}\nGot: {result}")
                 
     def test_grav_accel_RK4(self):
+
+#~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
         body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
         body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0), "Moon")
         system = [body1, body2]
         timeStep = 1;
         accel = body1.get_gravitatonal_acceleration_rk4(0, system, timeStep)
+#~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
 
         G = 6.67430e-11
         r = 384400000
@@ -188,10 +195,12 @@ class TestBody(ut.TestCase):
             print(f"Expected: {expected_accel}\nGot: {accel}")
 
     def test_grav_force_extert_cal(self):
+    
+#~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
         body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
         body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0), "Moon")  # 384,400 km away
-
-        result_force = body1.exert_gravitational_force(body2)
+#~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
+        result_force = Planetary_Body.calculate_gravitational_force_exerted_by_on(body1,body2)
 
         G = 6.67430e-11
         r = 384400000
@@ -210,7 +219,45 @@ class TestBody(ut.TestCase):
             print("\nTest Gravitational Force Exert Calculation: Failed")
             print(f"Expected: {expected_force}\nGot: {result_force}")
 
+class TestPackageFunction(ut.TestCase):
+    def test_body_dist(self):
+
+#~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
+        body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
+        body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0), "Moon")  
+        expect_dist = 0.00257 #AU 
+#~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
+        
+        result_dist = get_body_distance(body1, body2)
+        dist_ = m.isclose(expect_dist, result_dist, rel_tol=1e-4)
+
+        if dist_:
+            print("\nTest Calculations of distance between two bodies: Passed")
+        else:
+            print("\nTest Calculations of distance between two bodies: Failed")
+            print(f"\nExpected: {expect_dist}\nGot: {result_dist}")
+
+    def test_grav_force_euler(self):
+#~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
+        body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
+        body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0), "Moon")  
+        delta_time = 1.0 #time since, in months
+        expect_euler = 1.98e20
+#~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
+        
+        result_euler = get_gravitatonal_force_euler(body1, body2, delta_time)
+        euler_ = m.isclose(expect_euler, result_euler, rel_tol=1e-4)
+
+        if euler_:
+            print("\nTest Graviational Force using Euler: Passed")
+        else:
+            print("\nTest Graviational Force using Euler: Failed")
+            print(f"\nExpected: {expect_euler}\nGot: {result_euler}")
 '''
+    def test_write_csv(self):
+
+    def test_read_csv(self):    
+
 class TestGravitationalPhysics(ut.TestCase):
     def test_force_symmetric(self):
   
