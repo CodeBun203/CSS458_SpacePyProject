@@ -20,7 +20,7 @@ import math as m
 import unittest as ut
 import os
 import csv
-from Body import Planetary_Body, Vector3, get_body_distance, get_gravitatonal_force_euler
+from Body import Planetary_Body, Vector3, get_body_distance, get_gravitatonal_force_euler, KM_PER_S_TO_AU_PER_MONTH, AU_PER_MONTH_TO_KM_PER_SECOND
 #import Simulation
 
 # Placeholder constants
@@ -135,10 +135,11 @@ class TestBody(ut.TestCase):
     def test_update_pos(self):
 
 #~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
-            body = Planetary_Body(1.0, Vector3(0, 0, 0), Vector3(1, 1, 1), "Test")
-            dt = 1.0  # 1 second
+            body = Planetary_Body(1.0, Vector3(0, 0, 0), Vector3(AU_PER_MONTH_TO_KM_PER_SECOND, AU_PER_MONTH_TO_KM_PER_SECOND, AU_PER_MONTH_TO_KM_PER_SECOND), "Test")
+            dt = 1  # 1 month
 #~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
-            result_pos = body.update_pos(dt)
+            body.update_pos(dt)
+            result_pos = body.pos
             expected_position = Vector3(1, 1, 1)
 
             pos_pass = (
@@ -158,7 +159,7 @@ class TestBody(ut.TestCase):
 #~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
         body = Planetary_Body(1.0, Vector3(1, 2, 3), Vector3(4, 5, 6), "Test")
         result = body.as_type_list()
-        expected = [1, 2, 3, 4, 5, 6]
+        expected = ["Test", 1.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
 #~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
 
         if result == expected:
@@ -224,8 +225,8 @@ class TestPackageFunction(ut.TestCase):
 
 #~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
         body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
-        body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0), "Moon")  
-        expect_dist = 0.00257 #AU 
+        body2 = Planetary_Body(7.348e22, Vector3(380000, 20, 384399812.175), Vector3(0, 0, 0), "Moon")  
+        expect_dist = 384400000 #AU 
 #~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
         
         result_dist = get_body_distance(body1, body2)
@@ -241,11 +242,10 @@ class TestPackageFunction(ut.TestCase):
 #~{}~~~~~~~~~~~~~~User Modification Area~~~~~~~~~~~~~~{}~
         body1 = Planetary_Body(5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0), "Earth")
         body2 = Planetary_Body(7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0), "Moon")  
-        delta_time = 1.0 #time since, in months
-        expect_euler = 1.98e20
+        expect_euler = 1.982e20
 #~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~
         
-        result_euler = get_gravitatonal_force_euler(body1, body2, delta_time)
+        result_euler = get_gravitatonal_force_euler(body1, body2)
         euler_ = m.isclose(expect_euler, result_euler, rel_tol=1e-4)
 
         if euler_:

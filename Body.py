@@ -1,4 +1,7 @@
-KM_PER_S_TO_AU_PER_MONTH = 0.0175671
+AU_TO_KM = 149597870.691
+MONTH_TO_SECONDS = 2629800
+AU_PER_MONTH_TO_KM_PER_SECOND = AU_TO_KM / MONTH_TO_SECONDS
+KM_PER_S_TO_AU_PER_MONTH = 1 / AU_PER_MONTH_TO_KM_PER_SECOND
 DAYS_PER_MONTH = 365.25 / 12.0
 
 # Gravitational constant in AU^3/(MEarth * day^2)
@@ -74,7 +77,7 @@ def read_system(file_name):
 
 
 #-------------------------- Body Gravitational Force --------------------------
-def get_gravitatonal_force_euler(body1, body2, delta_time):
+def get_gravitatonal_force_euler(body1, body2):
     """Get the gravitational force between 2 bodies based on the elasped 
     time using eulers method
     
@@ -110,7 +113,7 @@ def get_gravitatonal_force_euler(body1, body2, delta_time):
             F = 0.0
         # Law of Universal Gravitaion Equation
         else:
-            F = ( ( G * m1 * m2 ) / np.pow( r_val, 2 ) )
+            F = ( ( G * m1 * m2 ) / ( r_val ** 2 ) )
         
         # Return the force
         return F  
@@ -450,7 +453,7 @@ class Planetary_Body:
 
         """
         if self.mass == 0:
-            acceleration = Vector3(0,0,0)
+            acceleration = Vector3(0,0,0) # Funny how this isn't true (photons)
         else:
             acceleration = force_vector / self.mass 
         self.velocity = self.velocity + (acceleration * delta_time) 
