@@ -1,133 +1,169 @@
 # simulation.py
-# Designed to work with the "Body.py"
-
 import numpy as np
-from Body import Planetary_Body, Vector3 
+from Body import Planetary_Body, Vector3, KM_PER_S_TO_AU_PER_MONTH, CONVERT_ACCEL_AU_MONTH2_TO_KM_S_MONTH
 
 class Simulation:
     """
-    Manages and runs an N-body gravitational simulation using object-oriented
-    methods from the Planetary_Body class.
+    Manages and runs an N-body gravitational simulation using RK4 integration.
+    Time step is in months. Positions are AU, Velocities are km/s.
     """
 
-    def __init__(self, list_of_planetary_bodies, time_step_days=1.0):
-        """
-        Initializes the simulation.
-
-        Args:
-            list_of_planetary_bodies (list[Planetary_Body]): A list of pre-initialized 
-                                                             Planetary_Body objects.
-            time_step_days (float): The duration of each simulation step in days.
-                                    This must be consistent with the units used
-                                    within Planetary_Body (AU, MEarth, days).
-        """
+    def __init__(self, list_of_planetary_bodies, time_step_months=0.1): # Default to 0.1 months
         if not all(isinstance(pb, Planetary_Body) for pb in list_of_planetary_bodies):
-            raise TypeError("All items in list_of_planetary_bodies must be instances of Planetary_Body.")
+            raise TypeError("All items must be Planetary_Body instances.")
             
-        self.bodies = list_of_planetary_bodies  # Store the list of Planetary_Body objects
-        self.dt_days = float(time_step_days)    # Time step for the simulation in days
-        
-        self.body_names = [body.name for body in self.bodies] # For visualization/logging
-        
-        # This list will store a snapshot of all body positions at each time step
+        self.bodies = list_of_planetary_bodies
+        self.dt_months = float(time_step_months) # Time step for RK4 in months
+        self.body_names = [body.name for body in self.bodies]
         self.position_history = []
 
-    def run_simulation(self, total_duration_years):
+    def _get_system_state_derivatives(self, temp_system_state):
         """
-        Runs the N-body simulation for a specified total duration.
-
-        The simulation loop follows these steps for each time increment (dt):
-        1. Calculate Net Forces: For each body, calculate the sum of gravitational
-           forces exerted on it by all other bodies.
-        2. Update Velocities: Using the net force and mass (F=ma), update each
-           body's velocity over the time step (dv = a*dt).
-        3. Update Positions: Using the new velocity, update each body's position
-           over the time step (dx = v*dt).
-        4. Record State: Store the positions for later animation/analysis.
-
+        Calculates derivatives for the RK4 method.
         Args:
-            total_duration_years (float): The total duration for which to run the simulation, in years.
-
+            temp_system_state (list[Planetary_Body]): List of bodies representing the current state
+                                                     (pos in AU, vel in km/s).
         Returns:
-            numpy.ndarray: An array containing the history of positions for all bodies.
-                           Shape: (num_steps, num_bodies, 3)
+            tuple(list[Vector3], list[Vector3]):
+                - pos_derivatives (list of velocities in AU/month)
+                - vel_derivatives (list of accelerations in km/(s*month))
         """
+        num_bodies = len(temp_system_state)
+        
+        # 1. Calculate raw gravitational accelerations in AU/month^2
+        raw_accels_AU_month_sq = [Vector3(0,0,0) for _ in range(num_bodies)]
+        for i in range(num_bodies):
+            target_body = temp_system_state[i]
+            total_force_on_target_AU_MEarth_month_sq = Vector3(0,0,0)
+            for j in range(num_bodies):
+                if i == j:
+                    continue
+                acting_body = temp_system_state[j]
+                # force is in MEarth * AU / month^2
+                force_vector = Planetary_Body.calculate_gravitational_force_exerted_by_on(
+                    acting_body=acting_body,
+                    target_body=target_body
+                )
+                total_force_on_target_AU_MEarth_month_sq += force_vector
+            
+            if target_body.mass != 0:
+                # accel_AU_month_sq = Force / mass
+                raw_accels_AU_month_sq[i] = total_force_on_target_AU_MEarth_month_sq / target_body.mass
+        
+        # 2. Calculate position derivatives (dx/dt in AU/month)
+        # vel_kms * (AU/month)/(km/s) = AU/month
+        pos_derivatives_AU_month = [body.velocity * KM_PER_S_TO_AU_PER_MONTH for body in temp_system_state]
+
+        # 3. Convert accelerations from AU/month^2 to km/(s*month) for velocity derivatives
+        # accel_AU_month_sq * (km/(s*month))/(AU/month^2) = km/(s*month)
+        vel_derivatives_kms_month = [acc * CONVERT_ACCEL_AU_MONTH2_TO_KM_S_MONTH for acc in raw_accels_AU_month_sq]
+        
+        return pos_derivatives_AU_month, vel_derivatives_kms_month
+
+
+    def run_simulation(self, total_duration_years):
         if not isinstance(total_duration_years, (int, float)) or total_duration_years <= 0:
             raise ValueError("total_duration_years must be a positive number.")
 
-        num_simulation_steps = int(total_duration_years * 365.25 / self.dt_days)
+        total_duration_months = total_duration_years * 12.0
+        num_simulation_steps = int(total_duration_months / self.dt_months)
+        dt = self.dt_months # RK4 time step in months
+        num_bodies = len(self.bodies)
         
-        print(f"Running N-body simulation for {total_duration_years:.2f} years "
-              f"with a {self.dt_days:.2f}-day time step ({num_simulation_steps} steps)...")
+        print(f"Running N-body simulation for {total_duration_years:.2f} years ({total_duration_months:.2f} months) "
+              f"with a {self.dt_months:.3f}-month time step ({num_simulation_steps} steps) using RK4...")
         
-        # --- Main Simulation Loop ---
+        initial_positions_snapshot = [body.pos.to_list() for body in self.bodies]
+        self.position_history.append(initial_positions_snapshot)
+        
         for step_num in range(num_simulation_steps):
-            
-            # Print progress every N steps if desired
-            if num_simulation_steps > 100 and step_num % (num_simulation_steps // 20) == 0 and step_num > 0:
+            if num_simulation_steps > 100 and step_num > 0 and step_num % (num_simulation_steps // 20) == 0:
                  print(f"  Processed step {step_num}/{num_simulation_steps} ({(step_num/num_simulation_steps*100):.0f}%)")
             
-            # --- Calculate Net Gravitational Forces on Each Body ---
-            net_forces_on_bodies = [Vector3(0, 0, 0) for _ in self.bodies] # Create vector for each body
+            y0_pos_AU = [body.pos.copy() for body in self.bodies]       # AU
+            y0_vel_kms = [body.velocity.copy() for body in self.bodies] # km/s
 
-            # Loop through all pairs of bodies to calculate forces
-            for i, target_body in enumerate(self.bodies):
-                for j, acting_body in enumerate(self.bodies):
-                    if i == j:
-                        continue
-                    
-                    force_vector = Planetary_Body.calculate_gravitational_force_exerted_by_on(
-                        acting_body=acting_body,
-                        target_body=target_body
-                    )
-                    net_forces_on_bodies[i] = net_forces_on_bodies[i] + force_vector
-            
-            # --- 2. Update Velocities of All Bodies ---
-            for i, body in enumerate(self.bodies):
-                body.update_velocity_from_net_force(
-                    net_forces_on_bodies[i],
-                    self.dt_days
-                )
+            # --- RK4 Stage k1 ---
+            # Derivatives at current state (self.bodies)
+            k1_pos_deriv_AU_month, k1_vel_deriv_kms_month = self._get_system_state_derivatives(self.bodies)
 
-            # --- 3. Update Positions of All Bodies ---
-            for body in self.bodies:
-                body.update_position(self.dt_days)
+            # --- RK4 Stage k2 ---
+            temp_bodies_k2 = []
+            for i in range(num_bodies):
+                pos_k2_intermediate_AU = y0_pos_AU[i] + (k1_pos_deriv_AU_month[i] * (dt / 2.0))
+                vel_k2_intermediate_kms = y0_vel_kms[i] + (k1_vel_deriv_kms_month[i] * (dt / 2.0))
+                temp_bodies_k2.append(Planetary_Body(name_val=self.bodies[i].name, 
+                                                     mass_val=self.bodies[i].mass, 
+                                                     pos_vector=pos_k2_intermediate_AU, 
+                                                     vel_vector=vel_k2_intermediate_kms))
+            k2_pos_deriv_AU_month, k2_vel_deriv_kms_month = self._get_system_state_derivatives(temp_bodies_k2)
+
+            # --- RK4 Stage k3 ---
+            temp_bodies_k3 = []
+            for i in range(num_bodies):
+                pos_k3_intermediate_AU = y0_pos_AU[i] + (k2_pos_deriv_AU_month[i] * (dt / 2.0))
+                vel_k3_intermediate_kms = y0_vel_kms[i] + (k2_vel_deriv_kms_month[i] * (dt / 2.0))
+                temp_bodies_k3.append(Planetary_Body(name_val=self.bodies[i].name,
+                                                     mass_val=self.bodies[i].mass,
+                                                     pos_vector=pos_k3_intermediate_AU,
+                                                     vel_vector=vel_k3_intermediate_kms))
+            k3_pos_deriv_AU_month, k3_vel_deriv_kms_month = self._get_system_state_derivatives(temp_bodies_k3)
+
+            # --- RK4 Stage k4 ---
+            temp_bodies_k4 = []
+            for i in range(num_bodies):
+                pos_k4_intermediate_AU = y0_pos_AU[i] + (k3_pos_deriv_AU_month[i] * dt)
+                vel_k4_intermediate_kms = y0_vel_kms[i] + (k3_vel_deriv_kms_month[i] * dt)
+                temp_bodies_k4.append(Planetary_Body(name_val=self.bodies[i].name,
+                                                     mass_val=self.bodies[i].mass,
+                                                     pos_vector=pos_k4_intermediate_AU,
+                                                     vel_vector=vel_k4_intermediate_kms))
+            k4_pos_deriv_AU_month, k4_vel_deriv_kms_month = self._get_system_state_derivatives(temp_bodies_k4)
+
+            # --- Update final positions (AU) and velocities (km/s) ---
+            for i in range(num_bodies):
+                # Weighted average of position derivatives (AU/month)
+                avg_pos_deriv_AU_month = (k1_pos_deriv_AU_month[i] + 
+                                         (k2_pos_deriv_AU_month[i] * 2.0) + 
+                                         (k3_pos_deriv_AU_month[i] * 2.0) + 
+                                         k4_pos_deriv_AU_month[i]) / 6.0
+                self.bodies[i].pos = y0_pos_AU[i] + (avg_pos_deriv_AU_month * dt)
+
+                # Weighted average of velocity derivatives (km/(s*month))
+                avg_vel_deriv_kms_month = (k1_vel_deriv_kms_month[i] + 
+                                          (k2_vel_deriv_kms_month[i] * 2.0) + 
+                                          (k3_vel_deriv_kms_month[i] * 2.0) + 
+                                          k4_vel_deriv_kms_month[i]) / 6.0
+                self.bodies[i].velocity = y0_vel_kms[i] + (avg_vel_deriv_kms_month * dt)
             
-            # --- 4. Record the Positions for this Time Step ---
             current_positions_snapshot = [body.pos.to_list() for body in self.bodies]
             self.position_history.append(current_positions_snapshot)
             
         print("Simulation complete.")
-        
         return np.array(self.position_history)
 
-#==============================================================================
-# Example Usage (similar to how run_simulation.py would use it)
-#==============================================================================
 if __name__ == "__main__":
-    print("This is the Simulation class definition. To run a simulation, "
-          "create instances of Planetary_Body, then an instance of Simulation, "
-          "and call its run_simulation() method in Driver.py.")
-
+    print("Simulation.py example using months and km/s:")
     try:
-        sun = Planetary_Body(name_val="Sun", mass_val=333000.0, 
-                             pos_vector=Vector3(0,0,0), vel_vector=Vector3(0,0,0))
-        earth = Planetary_Body(name_val="Earth", mass_val=1.0, 
-                               pos_vector=Vector3(1.0,0,0), vel_vector=Vector3(0,0.0172,0))
+        sun = Planetary_Body("Sun", 333000.0, Vector3(0,0,0), Vector3(0,0,0))
+        # Earth's average orbital speed is ~29.78 km/s
+        earth = Planetary_Body("Earth", 1.0, Vector3(1.0,0,0), Vector3(0,29.78,0))
 
-        simple_sim = Simulation(list_of_planetary_bodies=[sun, earth], time_step_days=1.0)
+        # Time step: e.g., 0.1 months (approx 3 days)
+        # For a stable Earth orbit, smaller time steps are better.
+        # 1 day = 1 / (365.25/12) months approx 1/30.4375 months
+        one_day_in_months = 1.0 / (365.25 / 12.0)
+        sim = Simulation([sun, earth], time_step_months=one_day_in_months * 3) # Simulating with ~3 day steps
 
-        print("\nRunning a simple 2-body test simulation (Sun and Earth for 10 days):")
-        position_history = simple_sim.run_simulation(total_duration_years=(10/365.25))
+        # Simulate for a short period, e.g., 2 months (approx 1/6th of an orbit)
+        duration_years = 2.0 / 12.0 
         
-        print(f"\nSimulation finished. {len(position_history)} time steps recorded.")
-        print(f"Initial position of Earth: {position_history[1][0]}")
-        print(f"Initial position of Sun: {position_history[1][1]}")
-        print(f"Final position of Earth: {simple_sim.bodies[1].pos}")
-        print(f"Final position of Sun: {simple_sim.bodies[0].pos}")
+        print(f"\nInitial Earth: {earth}")
+        history = sim.run_simulation(duration_years)
+        print(f"Simulation finished. {len(history)} steps recorded.")
+        print(f"Final Earth: {earth}")
 
-    except ImportError:
-        print("Could not import Planetary_Body or Vector3 from Body.py. "
-              "Make sure Body.py (corrected version) is in the same directory.")
     except Exception as e:
-        print(f"An error occurred during the example: {e}")
+        print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()

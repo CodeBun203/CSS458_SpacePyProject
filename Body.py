@@ -1,3 +1,173 @@
+AU_TO_KM = 149597870.691
+MONTH_TO_SECONDS = 2629800
+AU_PER_MONTH_TO_KM_PER_SECOND = AU_TO_KM / MONTH_TO_SECONDS
+KM_PER_S_TO_AU_PER_MONTH = 1 / AU_PER_MONTH_TO_KM_PER_SECOND
+DAYS_PER_MONTH = 365.25 / 12.0
+
+# Gravitational constant in AU^3/(MEarth * day^2)
+_G_ASTRO_DAYS_REF = (0.017202098950233253**2) / 333000.0 # Approx 8.886e-10
+
+# Gravitational constant in AU^3/(MEarth * month^2)
+# Scipy constants gives G in m^3/(kg * s^2),:
+G_ASTRO_MONTHS = _G_ASTRO_DAYS_REF * (DAYS_PER_MONTH**2) # Approx 8.231e-7
+CONVERT_ACCEL_AU_MONTH2_TO_KM_S_MONTH = 1.0 / KM_PER_S_TO_AU_PER_MONTH
+
+
+#==============================================================================
+#                                 Package Methods
+#==============================================================================
+
+#------------------------------ CSV Write Method ------------------------------
+def write_system(system, file_name):
+    """Write a system of bodies to a CSV file.
+    
+    Method Arguments:
+    * system: A list of bodies
+    * file_name: A path and file name to save thae data into. (Example: 
+      Data/System.csv).
+
+    Output:
+    * None
+    """
+    import csv
+    
+    with open(file_name, 'w', newline=',') as csvfile:
+        writer = csv.writer(csvfile)
+        # Write a header
+        writer.writerow(['Name', 'Mass', 'Pos.x', 'Pos.y', 'Pos.z', 'Vel.x', \
+                         'Vel.y', 'Vel.z'])
+        # Write the system
+        for i in range(0, len(system)):
+            writer.writerow(system[i].as_type_list())
+
+
+
+#------------------------------ CSV Read Method -------------------------------
+def read_system(file_name):
+    """Write a system of bodies to a CSV file.
+    
+    Method Arguments:
+    * file_name: A path and file name to read thae data from. (Example: 
+      Data/System.csv).
+
+    Output:
+    * A list of bodies that were stored in the file
+    """
+    import csv
+    
+    with open(file_name, newline=',') as csvfile:
+        reader = csv.reader(csvfile)
+        # Skip the header
+        next(reader) 
+        # Read the system
+        system = []
+        for row in reader:
+            if(len(row) >= 8):
+                new_name = row[0]
+                new_mass = row[1]
+                new_pos = Vector3(row[2], row[3], row[4])
+                new_vel = Vector3(row[5], row[6], row[7])
+                new_body = Planetary_Body(new_mass, new_pos, new_vel, new_name)
+                system.append(new_body)
+            else:
+                print("Encountered a row with too little data to make a body")
+                print(row)
+        return system
+
+
+
+#-------------------------- Body Gravitational Force --------------------------
+def get_gravitatonal_force_euler(body1, body2):
+    """Get the gravitational force between 2 bodies based on the elasped 
+    time using eulers method
+    
+    Method Arguments:
+    * body1: The first body. Must be of the Planetary_Body class.
+    * body2: The second body. Must be of the Planetary_Body class.
+    * delta_time: The time since the previous call in months.
+
+    Output:
+    * None
+
+    Uses the law of universal gravitation to determine the force applied to 
+    both bodies from their current positions.
+    """
+    if isinstance(body1, Planetary_Body) and isinstance(body2, Planetary_Body): # Corrected basic check
+        import scipy.constants as sp
+        import numpy as np
+        
+        # Law of Universal Gravitaion Variables
+        m1 = float(body1.mass) # Ensure float for calculation
+        m2 = float(body2.mass) # Ensure float for calculation
+        G = sp.gravitational_constant 
+        r_val = get_body_distance(body1, body2)
+
+        # Check if r_val is a number
+        if not isinstance(r_val, (int, float)):
+            # return a default if get_body_distance fails
+            print(f"Warning: Could not calculate distance for {body1.name} and {body2.name}, get_body_distance returned: {r_val}")
+            return 0.0
+
+        # Handle case of 2 bodies at the same position
+        if np.isclose(r_val, 0.0):
+            F = 0.0
+        # Law of Universal Gravitaion Equation
+        else:
+            F = ( ( G * m1 * m2 ) / ( r_val ** 2 ) )
+        
+        # Return the force
+        return F  
+    
+    # One of the parametes was not a body
+    else:
+        if not isinstance(body1, Planetary_Body):
+            raise ValueError("get_attraction_force(body1, body2) " + \
+                             "requires that the first parameter be of " + \
+                                 "type Planetary_Body")
+        else: # Implies body2 is not a Planetary_Body
+            raise ValueError("get_attraction_force(body1, body2) " + \
+                             "requires that the second parameter be of" + \
+                                 " type Planetary_Body")
+
+def partial_step(vec1, vec2, time_step):
+    return (vec1 + vec2) * time_step
+
+
+
+#------------------------------- Body Distance --------------------------------
+def get_body_distance(body1, body2):
+    """Find the distance between 2 bodies
+        
+    Method Arguments:
+    * body1: The first body. Must be of the Planetary_Body class.
+    * body2: The second body. Must be of the Planetary_Body class.
+
+    Output:
+    * The distance between the 2 bodies in AUs.
+    
+    Will raise an error if either of the arguments are not of the 
+    Planetary_Body class.
+    """
+    if isinstance(body1, Planetary_Body) \
+    and isinstance(body2, Planetary_Body): 
+        import numpy as np 
+        componenets = body1.pos - body2.pos # There is no subtraction operator for Planetary_Body
+        distance = np.sqrt((componenets.x ** 2) + \
+                           (componenets.y ** 2) + \
+                           (componenets.z ** 2))
+        return distance
+    # One of the parametes was not a body
+    else:
+        if not isinstance(body1, Planetary_Body): 
+            raise ValueError("get_body_distance(body1, body2) requires" + \
+                             " that the first parameter be of type " + \
+                             "Planetary_Body")
+        else:
+            raise ValueError("get_body_distance(body1, body2) requires" + \
+                             " that the second parameter be of type " + \
+                             "Planetary_Body")
+
+
 #==============================================================================
 #                                  Vector3 Class
 #==============================================================================
@@ -15,11 +185,9 @@ class Vector3:
         Output:
         * None
         """
-        self.x = x_val
-        self.y = y_val
-        self.z = z_val
-    
-    
+        self.x = float(x_val) 
+        self.y = float(y_val)
+        self.z = float(z_val)
     
     #--------------------------- Arithmetic Methods ---------------------------    
     def __add__(self, scalar):
@@ -37,7 +205,7 @@ class Vector3:
         If the input was a Vector3: Each component this Vector3 are added to
         to the same component of the input Vector3. (x + x), (y + y), (z + z).
         """
-        if isinstance(Vector3(), scalar):
+        if isinstance(scalar, Vector3): 
             return Vector3(self.x + scalar.x, self.y + scalar.y, self.z + \
                            scalar.z)
         else:
@@ -59,7 +227,7 @@ class Vector3:
         from to the same component of the input Vector3. (x - x), (y - y), 
         (z - z).
         """
-        if isinstance(Vector3(), scalar):
+        if isinstance(scalar, Vector3): 
             return Vector3(self.x - scalar.x, self.y - scalar.y, self.z - \
                            scalar.z)
         else:
@@ -80,12 +248,12 @@ class Vector3:
         If the input was a Vector3: Each component this Vector3 are multiplied 
         with the same component of the input Vector3. (x * x), (y * y), (z * z)
         """
-        if isinstance(Vector3(), scalar):
+        if isinstance(scalar, Vector3):
             return Vector3(self.x * scalar.x, self.y * scalar.y, self.z * \
                            scalar.z)
         else:
             return Vector3(self.x * scalar, self.y * scalar, self.z * scalar)
-    
+
     def __truediv__(self, scalar):
         """The quotient of a scalar or Vector3 and this Vector3.
         
@@ -101,13 +269,15 @@ class Vector3:
         If the input was a Vector3: Each component this Vector3 are divided 
         from the same component of the input Vector3. (x / x), (y / y), (z / z)
         """
-        if isinstance(Vector3(), scalar):
+        if isinstance(scalar, Vector3): # Avoid division by zero
+            if scalar.x == 0 or scalar.y == 0 or scalar.z == 0:
+                raise ValueError("Component-wise division by Vector3 containing zero.")
             return Vector3(self.x / scalar.x, self.y / scalar.y, self.z / \
                            scalar.z)
         else:
-            return Vector3(self.x / scalar, self.y / scalar, self.z / scalar)
-    
-    
+             if scalar == 0:
+                raise ValueError("Division by zero scalar.")
+             return Vector3(self.x / scalar, self.y / scalar, self.z / scalar)
     
     #----------------------------- Getter Methods -----------------------------
     def normalize(self):
@@ -122,28 +292,45 @@ class Vector3:
         Returns a new Vector3 with the same direction as this vector, but with 
         a magnitude of 1.
         """
+        mag = self.magnitude()
+        if mag == 0: 
+            return Vector3(0.0, 0.0, 0.0)
+        return Vector3(self.x / mag, self.y / mag, self.z / mag)
+
+    def magnitude(self):
+        """Return the magnitude of this vector
+        
+        Method Arguments:
+        * None
+
+        Output:
+        * The magnitude of this Vector3.
+        """
         import numpy as np
-        component_sum = np.absolute(self.x) + np.absolute(self.y) + \
-        np.absolute(self.z)
-        return Vector3(self.x / component_sum, self.y / component_sum, self.z / 
-                       component_sum)
+        return np.sqrt( ( self.x ** 2 ) + ( self.y ** 2 ) + ( self.z ** 2) ) 
 
+    # Added to_list method for Simulation.py position history
+    def to_list(self):
+        return [self.x, self.y, self.z]
 
+    # Added copy method for Simulation.py to avoid modifying original vectors during RK steps
+    def copy(self):
+        return Vector3(self.x, self.y, self.z)
 
-
+    # Added __str__ for easier debugging
+    def __str__(self):
+        return f"Vector3({self.x}, {self.y}, {self.z})"
 
 #==============================================================================
 #                             Planetary_Body Class
 #==============================================================================
-class Planetary_Body:
-    
+class Planetary_Body: 
+
     #---------------------------- Static Variables ----------------------------
-    km_per_s_to_AU_per_month = 0.0175671
-    
-    
+    km_per_s_to_AU_per_month = KM_PER_S_TO_AU_PER_MONTH
     
     #--------------------------- Constructor Method ---------------------------
-    def __init__(self, mass_val = 0.0, pos_vector = Vector3(), \
+    def __init__(self, mass_val = 0.0, pos_vector = Vector3(), 
                  vel_vector = Vector3(), name_val = ""):
         """Inialize a gravitational body.
         
@@ -156,50 +343,120 @@ class Planetary_Body:
         Output:
         * None
         """
-        self.name = name_val
-        self.mass = mass_val
+        self.name = str(name_val)
+        self.mass = float(mass_val) 
         self.pos = pos_vector
         self.velocity = vel_vector
     
+    @staticmethod
+    def calculate_gravitational_force_exerted_by_on(acting_body, target_body):
+        import numpy as np 
+        r_vector = acting_body.pos - target_body.pos 
+        dist_sq = r_vector.x**2 + r_vector.y**2 + r_vector.z**2 
+        if dist_sq == 0:
+            return Vector3(0, 0, 0) 
+        dist = np.sqrt(dist_sq)
+        if dist == 0: 
+            return Vector3(0,0,0)
+        force_scalar_part = G_ASTRO_MONTHS * acting_body.mass * target_body.mass / (dist * dist_sq)
+        force_vector = r_vector * force_scalar_part
+        return force_vector
     
-    
-    #----------------------------- Getter Methods -----------------------------
-    def get_body_distance(body1, body2):
-        """Find the distance between 2 bodies
+    def calculate_gravity_field(exerting_body, target_body):
+        """Returns the acceleration due to gravity an exerting object applies 
+        to a target object.
         
         Method Arguments:
-        * body1: The first body. Must be of the Planetary_Body class.
-        * body2: The second body. Must be of the Planetary_Body class.
+        * exerting_body: the body applying the force
+        * target_body: the body being pulled
 
         Output:
-        * The distance between the 2 bodies in AUs.
+        * The acceleration due to Gravity experienced by the target body.
         
-        Will raise an error if either of the arguments are not of the 
-        Planetary_Body class.
+        Uses the Gravitational Field Equation, which derives from Netwon's Law 
+        Universal Gravitation and Newton's second law of Motion.
+        
+        G = Gravitational Constant
+        r = distance between planets' center of mass
+        M = mass of the exerting body
+        a = Acceleration due to gravity
+
+        a = ( G * M ) / r^2
         """
-        if isinstance(Planetary_Body(), body1) \
-        and isinstance(Planetary_Body(), body2):
-            import numpy as np
-            componenets = body1 - body2
-            distance = np.sqrt(np.pow(componenets.x, 2) + \
-                               np.pow(componenets.y, 2) + \
-                               np.pow(componenets.z, 2))
-            return distance
-        # One of the parametes was not a body
-        else:
-            if not isinstance(Planetary_Body(), body1):
-                raise ValueError("get_body_distance(body1, body2) requires" + \
-                                 " that the first parameter be of type " + \
-                                 "Planetary_Body")
-            else:
-                raise ValueError("get_body_distance(body1, body2) requires" + \
-                                 " that the second parameter be of type " + \
-                                 "Planetary_Body")
+        import scipy.constants as sp
+        
+        # Gravitational Field Vars
+        G = sp.gravitational_constant
+        r = get_body_distance(target_body, exerting_body)
+        
+        #Gravitational Field Equation
+        # By dividing the gravitational force by an extra r, we don't have to 
+        # divide the distance by r to get the direction of the acceleration
+        grav_force_div_r = G * exerting_body.mass / r**3
+        
+        # Find the displacement of the bodies or (direction * r)
+        accel = (exerting_body.pos - target_body.pos) * grav_force_div_r
+        
+        return accel
+
+#----------------------------- Getter Methods -----------------------------    
+    def as_type_list(self): 
+        """Get the body data as a list.
+        
+        Method Arguments:
+        * None
+
+        Output:
+        * The body class as a list.
+        
+        Values are in the order of Name, Mass, Pos.x, Pos.y, Pos.z, Vel.x, 
+        Vel.y, Vel.z.
+        """
+        return [self.name, self.mass, self.pos.x, self.pos.y, self.pos.z, \
+                self.velocity.x, self.velocity.y, self.velocity.z]
     
+    def get_gravitatonal_acceleration_rk4(self, body_index, system, \
+                                          delta_time):
+        """
+        
+        """
+        import scipy.constants as sp
+        
+        G = sp.gravitational_constant
+        accel = Vector3(0.0, 0.0, 0.0)
+        
+        for index, external_body in enumerate(system):
+            if index != body_index:
+                r = get_body_distance(self, external_body)
+                # Not sure if it should be r**2 or r**3
+                temp = G * external_body.mass / r**3 
+                
+                #k1 - Euler's method
+                k1 = (external_body.pos - self.pos) * temp
+                
+                #k2 - accelration 0.5 timesteps in the future based on k1
+                #acceleration
+                temp_vel = partial_step(self.velocity, k1, 0.5)
+                temp_loc= partial_step(self.pos, temp_vel, 0.5 * delta_time)
+                k2 = (external_body.pos - temp_loc) * temp
+                
+                #k3 - acceleration 0.5 timestemps in the future using k2 
+                #acceleration
+                temp_vel = partial_step(self.velocity, k2, 0.5)
+                temp_loc= partial_step(self.pos, temp_vel, 0.5 * delta_time)
+                k3 = (external_body.pos - temp_loc) * temp
+                
+                #k4 - location 1 timestep in the future using k3 acceleration
+                temp_vel = partial_step(self.velocity, k3, 1)
+                temp_loc= partial_step(self.pos, temp_vel, delta_time)
+                k4 = (external_body.pos - temp_loc) * temp
+                
+                #calculate the acceleration
+                accel = accel + ((k1 + (k2 * 2) + (k3 * 2) + k4) / 6)
+        
+        return accel
     
-    
-    #----------------------------- Setter Methods -----------------------------
-    def update_pos(self, delta_time):
+    def update_pos(self, delta_time): 
         """Update the body's position based on it's velocity.
         
         Method Arguments:
@@ -211,73 +468,81 @@ class Planetary_Body:
         self.pos = self.pos + (self.velocity * delta_time * \
         Planetary_Body.km_per_s_to_AU_per_month)
         
-    def apply_force(self, force_vector):
+    def apply_force(self, force_vector, delta_time):
         """Apply a force on the body.
         
         Method Arguments:
         * force_vector: the force direction and magnitude.
+        * delta_time: the time since the previous call in months.
 
         Output:
         * None
         
-        Adds the force to the velocity.
+        Uses Newton's second law of motion, calculates the accelration vector 
+        applied to the body.
+        
+            Force = Mass * Acceleration -> Acceleration = Force / Mass
+            
+        Acceleration is then used in the following kinematic equation to get 
+        the change in the body's velocity.
+        
+            Velocity = Initial velocity + Acceleration * Duration of Force
+
         """
-        self.velocity = self.velocity + force_vector
-    
-    def apply_gravitatonal_force(body1, body2, delta_time):
-        """Apply the gravitational force between 2 bodies based on the elasped 
-        time.
+        if self.mass == 0:
+            acceleration = Vector3(0,0,0) # Funny how this isn't true (photons)
+        else:
+            acceleration = force_vector / self.mass 
+        self.velocity = self.velocity + (acceleration * delta_time) 
+        
+    def apply_acceleration(self, accel, delta_time): 
+        """Accelrate a body
         
         Method Arguments:
-        * body1: The first body. Must be of the Planetary_Body class.
-        * body2: The second body. Must be of the Planetary_Body class.
-        * delta_time: The time since the previous call in months.
+        * accel: the acceleration direction and magnitude.
+        * delta_time: the time since the previous call in months.
 
         Output:
         * None
-
-        Uses the law of universal gravitation to determine the force applied to 
-        both bodies.
-        """
-        if isinstance(Planetary_Body(), body1) \
-        and isinstance(Planetary_Body(), body2):
-            import scipy.constants as sp
-            import numpy as np
             
-            # Law of Universal Gravitaion Variables
-            m1 = body1.mass
-            m2 = body2.mass
-            G = sp.gravitational_constant
-            r = Planetary_Body.get_body_distance(body1, body2)
-            
-            # Handle case of 2 bodies at the same position
-            if np.isclose(r, 0.0):
-                F = 0.0
-            # Law of Universal Gravitaion Equation
-            else:
-                F = ( ( G * m1 * m2 ) / np.pow( r, 2 ) )
-            
-            # Apply force on both bodies toward each other
-            body1.apply_force(F * (body1 - body2).normalize(), delta_time)
-            body2.apply_force(F * (body2 - body1).normalize(), delta_time)    
+        Acceleration is  used in the following kinematic equation to get 
+        the change in the body's velocity.
         
-        # One of the parametes was not a body
-        else:
-            if not isinstance(Planetary_Body(), body1):
-                raise ValueError("get_attraction_force(body1, body2) " + \
-                                 "requires that the first parameter be of " + \
-                                     "type Planetary_Body")
-            else:
-                raise ValueError("get_attraction_force(body1, body2) " + \
-                                 "requires that the second parameter be of" + \
-                                     " type Planetary_Body")
+            Velocity = Initial velocity + Acceleration * Duration of Force
+            
+        """
+        self.velocity = self.velocity + (accel * delta_time) 
 
-
-
+    # Added __str__ for debugging and readability
+    def __str__(self):
+        return (f"PlanetaryBody(Name: {self.name}, Mass: {self.mass}, "
+                f"Pos: {self.pos}, Vel: {self.velocity})")
 
 
 #==============================================================================
 #                                  Test Code
 #==============================================================================
-if __name__ == "__main__":
-    print("Tests still need to be designed")
+if __name__ == "__main__": 
+    print("Package Functions:")
+    print("1. Body distance")
+    print("2. Gravitational Force Euler")
+    print("4. Write CSV") 
+    print("5. Read CSV")
+
+    print("\nNEW: Testing calculate_gravitational_force_exerted_by_on")
+    try:
+        sun_test = Planetary_Body(mass_val=333000.0, 
+                                  pos_vector=Vector3(0.0,0.0,0.0), 
+                                  vel_vector=Vector3(0.0,0.0,0.0), 
+                                  name_val="TestSun")
+        earth_test = Planetary_Body(mass_val=1.0, 
+                                    pos_vector=Vector3(1.0,0.0,0.0), 
+                                    vel_vector=Vector3(0.0,29.78,0.0), 
+                                    name_val="TestEarth")
+        force_on_earth = Planetary_Body.calculate_gravitational_force_exerted_by_on(sun_test, earth_test)
+        print(f"Force by Sun on Earth (MEarth*AU/month^2): {force_on_earth.x:.3e}, {force_on_earth.y:.3e}, {force_on_earth.z:.3e}")
+        print(f"Expected force magnitude on Earth: ~-0.274 MEarth*AU/month^2 (along x-axis)")
+    except Exception as e:
+        print(f"Error during new method test: {e}")
+        import traceback 
+        traceback.print_exc()
