@@ -31,7 +31,7 @@ def write_system(system, file_name):
     """
     import csv
     
-    with open(file_name, 'w', newline=',') as csvfile:
+    with open(file_name, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         # Write a header
         writer.writerow(['Name', 'Mass', 'Pos.x', 'Pos.y', 'Pos.z', 'Vel.x', \
@@ -55,7 +55,7 @@ def read_system(file_name):
     """
     import csv
     
-    with open(file_name, newline=',') as csvfile:
+    with open(file_name, newline='') as csvfile:
         reader = csv.reader(csvfile)
         # Skip the header
         next(reader) 
@@ -188,6 +188,31 @@ class Vector3:
         self.x = float(x_val) 
         self.y = float(y_val)
         self.z = float(z_val)
+    
+    
+    
+    #--------------------------- Comparison Method ----------------------------
+    def __eq__(self, other):
+        """Compare if 2 vectors are equal
+        
+        Method Arguments:
+        * other: A Vector3
+
+        Output:
+        * True: the 2 vectors hold the same data
+        * False: any of the data held differs
+        
+        uses numpy isclos() to compare floats
+        """
+        if isinstance(other, Planetary_Body):
+            import numpy as np
+            tx = np.isclose(self.x, other.x)
+            ty = np.isclose(self.y, other.y)
+            tz = np.isclose(self.z, other.z)
+            return tx and ty and tz
+        return False
+    
+    
     
     #--------------------------- Arithmetic Methods ---------------------------    
     def __add__(self, scalar):
@@ -347,6 +372,27 @@ class Planetary_Body:
         self.mass = float(mass_val) 
         self.pos = pos_vector
         self.velocity = vel_vector
+    
+    def __eq__(self, other):
+        """Compare if 2 bodies are equal
+        
+        Method Arguments:
+        * other: A body
+
+        Output:
+        * True: the 2 bodies hold the same data
+        * False: any of the data held differs
+        
+        uses numpy isclos() to compare floats
+        """
+        if isinstance(other, Planetary_Body):
+            import numpy as np
+            m = np.isclose(self.mass, other.mass)
+            p = self.pos = other.pos
+            v = self.velocity = other.velocity
+            n = self.name == other.name
+            return m and p and v and n
+        return False
     
     @staticmethod
     def calculate_gravitational_force_exerted_by_on(acting_body, target_body):
