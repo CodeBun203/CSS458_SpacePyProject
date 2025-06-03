@@ -6,6 +6,15 @@
 
         Current classes that are finished testing:
         Vector3
+
+        Needs to be fixed:
+        All functions within body testing
+
+        Needs to be rewritten:
+        Everything that's in comments (cause i realized that they dont call
+        the funtion until now)
+
+
 ''' 
 import numpy as np
 import math as m
@@ -124,7 +133,81 @@ class TestVectorClass(ut.TestCase):
             print(f"\nExpected Normalization: \n{expected_norm} \nGot: {result_norm}")
 
 class TestBody(ut.TestCase):
+    def test_update_pos(self):
+            body = Planetary_Body("Test", 1.0, Vector3(0, 0, 0), Vector3(1, 1, 1))
+            dt = 1.0  # 1 second
+            body.update(dt)
+
+            expected_position = Vector3(1, 1, 1)
+
+            pos_pass = (
+                m.isclose(body.position.x, expected_position.x) and
+                m.isclose(body.position.y, expected_position.y) and
+                m.isclose(body.position.z, expected_position.z)
+            )
+
+            if pos_pass:
+                print("\nTest Update Position: Passed")
+            else:
+                print("\nTest Update Position: Failed")
+                print(f"Expected Position: {expected_position}\nGot: {body.position}")
+          
+    def test_asType_list(self):
+        body = Planetary_Body("Test", 1.0, Vector3(1, 2, 3), Vector3(4, 5, 6))
+        result = body.as_type_list()
+        expected = [1, 2, 3, 4, 5, 6]
+
+        if result == expected:
+            print("\nTest as_type_list: Passed")
+        else:
+            print("\nTest as_type_list: Failed")
+            print(f"Expected: {expected}\nGot: {result}")
+                
+    def test_grav_accel_RK4(self):
+        body1 = Planetary_Body("Earth", 5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0))
+        body2 = Planetary_Body("Moon", 7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0))
+
+        accel = body1.compute_gravitational_acceleration_rk4([body2])
+
+        G = 6.67430e-11
+        r = 384400000
+        expected_accel_x = G * body2.mass / (r ** 2)
+        expected_accel = Vector3(expected_accel_x, 0, 0)
+
+        accel_pass = (
+            m.isclose(accel.x, expected_accel.x, rel_tol=1e-5) and
+            m.isclose(accel.y, expected_accel.y, rel_tol=1e-5) and
+            m.isclose(accel.z, expected_accel.z, rel_tol=1e-5)
+        )
+
+        if accel_pass:
+            print("\nTest Gravitational Acceleration RK4: Passed")
+        else:
+            print("\nTest Gravitational Acceleration RK4: Failed")
+            print(f"Expected: {expected_accel}\nGot: {accel}")
+
     def test_grav_force_extert_cal(self):
+        body1 = Planetary_Body("Earth", 5.972e24, Vector3(0, 0, 0), Vector3(0, 0, 0))
+        body2 = Planetary_Body("Moon", 7.348e22, Vector3(384400000, 0, 0), Vector3(0, 0, 0))  # 384,400 km away
+
+        result_force = body1.exert_gravitational_force(body2)
+
+        G = 6.67430e-11
+        r = 384400000
+        expected_magnitude = G * body1.mass * body2.mass / (r ** 2)
+        expected_force = Vector3(expected_magnitude, 0, 0)
+
+        force_pass = (
+            m.isclose(result_force.x, expected_force.x, rel_tol=1e-5) and
+            m.isclose(result_force.y, expected_force.y, rel_tol=1e-5) and
+            m.isclose(result_force.z, expected_force.z, rel_tol=1e-5)
+        )
+
+        if force_pass:
+            print("\nTest Gravitational Force Exert Calculation: Passed")
+        else:
+            print("\nTest Gravitational Force Exert Calculation: Failed")
+            print(f"Expected: {expected_force}\nGot: {result_force}")
 
 '''
 class TestGravitationalPhysics(ut.TestCase):
