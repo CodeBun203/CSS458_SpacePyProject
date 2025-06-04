@@ -121,6 +121,8 @@ def animate_simulation(position_history, names, masses):
         ax.set_ylim([-max_range, max_range])
         ax.set_zlim([-max_range, max_range])
 
+        ax.view_init(100, 0)
+
         # Add the colorbar to the figure
         # Doing it in init or just once after figure creation is fine.
         # To prevent adding it multiple times if init is called more than once
@@ -140,6 +142,7 @@ def animate_simulation(position_history, names, masses):
             trail_data = position_history[:frame+1, i]
             trails[i].set_data(trail_data[:, 0], trail_data[:, 1])
             trails[i].set_3d_properties(trail_data[:, 2])
+
         return scatter_plots + trails
 
     frame_skip = max(1, num_steps // 1000)
