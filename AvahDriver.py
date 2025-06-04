@@ -34,6 +34,7 @@ def remove_two_bodies():
     simulation_instance = Simulation(
         list_of_planetary_bodies=list_of_bodies,
         time_step_months=TIME_STEP_MONTHS
+        name = "RemoveTwobodies"
     )
 
     print(f"Starting simulation: Removing Jupiter and Venus from Solar System (duration: {SIMULATION_DURATION_YEARS} years, step: {TIME_STEP_MONTHS:.4f} months)...")
@@ -86,7 +87,7 @@ def remove_one_body():
     simulation_instance = Simulation(
         list_of_planetary_bodies=list_of_bodies,
         time_step_months=TIME_STEP_MONTHS,
-        sim_name = "remove_jupiter_and_venus"
+        name = "RemoveOneBody"
     )
 
     print(f"Starting simulation: Removing Jupiter from Solar System (duration: {SIMULATION_DURATION_YEARS} years, step: {TIME_STEP_MONTHS:.4f} months)...")
