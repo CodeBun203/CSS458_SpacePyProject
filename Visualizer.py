@@ -56,6 +56,17 @@ def animate_simulation(position_history, names, masses):
         masses (list[float]): A list of masses for each body, used for color-coding.
     """
     num_steps, num_bodies, _ = position_history.shape
+    # planet_color_map = {
+    #     'Sun': 'yellow',
+    #     'Mercury': 'darkgray',
+    #     'Venus': 'orange',
+    #     'Earth': 'blue',
+    #     'Mars': 'red',
+    #     'Jupiter': 'chocolate',
+    #     'Saturn': 'goldenrod',
+    #     'Uranus': 'lightblue',
+    #     'Neptune': 'purple'
+    # }
 
     if len(masses) != num_bodies:
         raise ValueError("The length of 'masses' list must match the number of bodies.")
@@ -79,15 +90,11 @@ def animate_simulation(position_history, names, masses):
         max_mass = np.max(np_masses)
         normalized_masses = (np_masses - min_mass) / (max_mass - min_mass)
 
-    # `viridis` goes from yellow (high) to blue/purple (low).
-    colormap = plt.cm.viridis
-
     # Create scatter plot objects for each body
-    sizes = [100 if name == 'Sun' else 20 for name in names]
-    # colors = plt.cm.get_cmap('tab10', num_bodies) # OLD color logic
+    sizes = [100 if name == 'Sun' else plt.cm.get_cmap('tab10') for name in names]
     
     # Get colors from the colormap based on normalized mass
-    plot_colors = [colormap(norm_mass) for norm_mass in normalized_masses]
+    plot_colors = [planet_color_map.get(name, 'gray') for name in names]
 
     scatter_plots = [ax.scatter([], [], [], s=size, color=plot_colors[i], label=name) 
                      for i, (name, size) in enumerate(zip(names, sizes))]
@@ -104,7 +111,7 @@ def animate_simulation(position_history, names, masses):
     else:
         norm = Normalize(vmin=np.min(np_masses), vmax=np.max(np_masses))
     
-    sm = plt.cm.ScalarMappable(cmap=colormap, norm=norm)
+    sm = plt.cm.ScalarMappable(cmap=size, norm=norm)
     sm.set_array([]) # You can set an array of values that your colormap is based on.
                      # For just showing the range, an empty array is fine if norm is set.
 
@@ -146,4 +153,5 @@ def animate_simulation(position_history, names, masses):
     anim = FuncAnimation(fig, update, frames=range(0, num_steps, frame_skip), \
                          init_func=init, blit=False, interval = 0)
     
+   # anim.save("C:\Users\Avafs\Desktop\School\Spring 25\CSS 458\CSS458_SpacePyProject\AvahVisualizations")
     plt.show()

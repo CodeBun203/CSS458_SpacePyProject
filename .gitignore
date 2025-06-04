@@ -1,7 +1,2 @@
-dumps/EvenDistributeSunMass/0.pkl
-dumps/LagrangeStability/0.pkl
-dumps/PerpendicularPlanes/0.pkl
-dumps/RandomMasses/0.pkl
-dumps/RemoveOneBody/0.pkl
-dumps/RemoveTwobodies/0.pkl
-dumps/SwapBodyPositions/0.pkl
+.pkl
+.csv
