@@ -151,14 +151,14 @@ class Simulation:
             # Check if dump timer has been met
             if (time.time() - prev_time >= SimIO.MIN_DUMP_TIME):
                 print("Dumping Data")
-                SimIO.dump_history_pickle(sim_hist, "Placeholder", prev_step +1, step_num)
+                SimIO.dump_history_pickle(sim_hist, self.sim_name, prev_step +1, step_num)
                 prev_step = step_num
                 prev_time = time.time()
                 sim_hist = []
         
         print("Dumping Data")
         print("Simulation complete.")
-        SimIO.dump_history_pickle(sim_hist, "Placeholder", prev_step +1, num_simulation_steps-1)
+        SimIO.dump_history_pickle(sim_hist, self.sim_name, prev_step +1, num_simulation_steps-1)
         return np.array(self.position_history)
 
 if __name__ == "__main__":
