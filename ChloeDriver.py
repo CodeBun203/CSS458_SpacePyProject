@@ -44,7 +44,7 @@ def run_sim_with_G(G, sim_name, display_anim = False):
     position_history_array = simulation_instance.run_simulation(
         total_duration_years=SIMULATION_DURATION_YEARS
     )
-    print(f"Simulation finished. Elapsed time: {temp_time - time.time()}")
+    print(f"Simulation finished. Elapsed time: {time.time() - temp_time}")
 
 
     print("\nFinal states of bodies (Pos in AU, Vel in km/s):")
