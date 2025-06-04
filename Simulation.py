@@ -7,7 +7,7 @@ class Simulation:
     Manages and runs an N-body gravitational simulation using RK4 integration.
     Time step is in months. Positions are AU, Velocities are km/s.
     """
-    def __init__(self, list_of_planetary_bodies, time_step_months=0.1): # Default to 0.1 months
+    def __init__(self, list_of_planetary_bodies, time_step_months=0.1, name="Placeholder"): # Default to 0.1 months
         if not all(isinstance(pb, Planetary_Body) for pb in list_of_planetary_bodies):
             raise TypeError("All items must be Planetary_Body instances.")
             
@@ -15,6 +15,7 @@ class Simulation:
         self.dt_months = float(time_step_months) # Time step for RK4 in months
         self.body_names = [body.name for body in self.bodies]
         self.position_history = []
+        self.sim_name = name
 
     def _get_system_state_derivatives(self, temp_system_state):
         """
@@ -151,14 +152,14 @@ class Simulation:
             # Check if dump timer has been met
             if (time.time() - prev_time >= SimIO.MIN_DUMP_TIME):
                 print("Dumping Data")
-                SimIO.dump_history_pickle(sim_hist, "Placeholder", prev_step +1, step_num)
+                SimIO.dump_history_pickle(sim_hist, self.sim_name, prev_step +1, step_num)
                 prev_step = step_num
                 prev_time = time.time()
                 sim_hist = []
         
         print("Dumping Data")
         print("Simulation complete.")
-        SimIO.dump_history_pickle(sim_hist, "Placeholder", prev_step +1, num_simulation_steps-1)
+        SimIO.dump_history_pickle(sim_hist, self.sim_name, prev_step +1, num_simulation_steps-1)
         return np.array(self.position_history)
 
 if __name__ == "__main__":
