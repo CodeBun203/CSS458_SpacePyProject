@@ -99,7 +99,7 @@ def get_gravitatonal_force_euler(body1, body2):
         # Law of Universal Gravitaion Variables
         m1 = float(body1.mass) # Ensure float for calculation
         m2 = float(body2.mass) # Ensure float for calculation
-        G = sp.gravitational_constant 
+        G = _G_ASTRO_DAYS_REF
         r_val = get_body_distance(body1, body2)
 
         # Check if r_val is a number
@@ -432,7 +432,7 @@ class Planetary_Body:
         import scipy.constants as sp
         
         # Gravitational Field Vars
-        G = sp.gravitational_constant
+        G = _G_ASTRO_DAYS_REF
         r = get_body_distance(target_body, exerting_body)
         
         #Gravitational Field Equation
@@ -468,7 +468,7 @@ class Planetary_Body:
         """
         import scipy.constants as sp
         
-        G = sp.gravitational_constant
+        G = _G_ASTRO_DAYS_REF
         accel = Vector3(0.0, 0.0, 0.0)
         
         for index, external_body in enumerate(system):

@@ -5,6 +5,22 @@ import numpy as np
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import Normalize
 
+def run_anim(sim_name):
+    """takes a folder name containg a set of pickled data representing a system
+    over time and turns it into an animation
+    
+
+    Method Arguments:
+    * sim_name: The name of a simulation to load data from
+        
+    Output:
+    * None
+    """
+    data = anim_data(sim_name)
+    animate_simulation(data[0], data[1], data[2])
+
+
+
 def anim_data(sim_name):
     """takes a folder name containg a set of pickled data representing a system
     over time and turns it into the data for an anuimation

@@ -2,10 +2,11 @@
 import Body
 import time
 from Simulation import Simulation 
-from Visualizer import animate_simulation, anim_data
+from Visualizer import animate_simulation, anim_data, run_anim
 
 def run_sim_with_G(G, sim_name, display_anim = False):
     Body._G_ASTRO_DAYS_REF = G
+    Body.G_ASTRO_MONTHS = Body._G_ASTRO_DAYS_REF * (Body.DAYS_PER_MONTH**2)
     SIMULATION_DURATION_YEARS = 1000.0  # Total duration in years
     TIME_STEP_MONTHS = .1           # Simulation time step in months (e.g., 0.1 months ~ 3 days)
                                      # Or use daily steps: (1.0 / (365.25 / 12.0)) for 1 day in months
@@ -82,9 +83,12 @@ def main():
     for i in range(0, num_runs):
         run_sim_with_G(scaled_steps[i], sim_name + str(scaled_steps[i]))
     
-
+def view_sim(folder_name):
+    run_anim(folder_name)
 
 if __name__ == '__main__':
     main()
+    view_sim("GravConstant_0.5")
+    view_sim("GravConstant_2.0")
 
     
