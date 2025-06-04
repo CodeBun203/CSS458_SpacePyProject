@@ -143,7 +143,7 @@ def animate_simulation(position_history, names, masses):
         return scatter_plots + trails
 
     frame_skip = max(1, num_steps // 1000)
-    anim = FuncAnimation(fig, update, frames=range(0, num_steps, frame_skip),
-                         init_func=init, blit=False, interval=20)
-
+    anim = FuncAnimation(fig, update, frames=range(0, num_steps, frame_skip), \
+                         init_func=init, blit=False, interval = 0)
+    
     plt.show()
