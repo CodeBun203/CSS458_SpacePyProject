@@ -5,6 +5,46 @@ import numpy as np
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import Normalize
 
+def anim_data(sim_name):
+    """takes a folder name containg a set of pickled data representing a system
+    over time and turns it into the data for an anuimation
+    
+
+    Method Arguments:
+    * sim_name: The name of a simulation to load data from
+        
+    Output:
+    * A 2D array of planets formated for the animate_simulation method
+    """
+    import SimIO
+    
+    sim_hist = SimIO.reconstruct_history_pickle(sim_name)
+    
+    # Get position data
+    temp = np.shape(sim_hist)
+    num_steps = temp[0]
+    num_planets = temp[1]
+    pos_data = np.zeros((num_steps, num_planets, 3))
+    
+    for step in range(0, num_steps):
+        for planet in range(0, num_planets):
+            pos_data[step, planet, 0] = sim_hist[step, planet].pos.x
+            pos_data[step, planet, 1] = sim_hist[step, planet].pos.y
+            pos_data[step, planet, 2] = sim_hist[step, planet].pos.z
+            
+    # Get name data
+    name_data = []
+    for planet in range(0, num_planets):
+        name_data.append(sim_hist[0, planet].name)
+
+    # Get mass data
+    mass_data = []
+    for planet in range(0, num_planets):
+        mass_data.append(sim_hist[0, planet].mass)
+    
+    print(pos_data)
+    return (pos_data, name_data, mass_data)
+
 def animate_simulation(position_history, names, masses):
     """
     Creates and displays a 3D animation of the simulation.

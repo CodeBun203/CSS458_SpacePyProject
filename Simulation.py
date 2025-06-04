@@ -7,7 +7,6 @@ class Simulation:
     Manages and runs an N-body gravitational simulation using RK4 integration.
     Time step is in months. Positions are AU, Velocities are km/s.
     """
-
     def __init__(self, list_of_planetary_bodies, time_step_months=0.1): # Default to 0.1 months
         if not all(isinstance(pb, Planetary_Body) for pb in list_of_planetary_bodies):
             raise TypeError("All items must be Planetary_Body instances.")
@@ -62,6 +61,14 @@ class Simulation:
 
 
     def run_simulation(self, total_duration_years):
+        # Data dump timer
+        import time
+        import SimIO
+        import copy
+        prev_time = time.time()
+        prev_step = -1
+        
+        
         if not isinstance(total_duration_years, (int, float)) or total_duration_years <= 0:
             raise ValueError("total_duration_years must be a positive number.")
 
@@ -75,6 +82,7 @@ class Simulation:
         
         initial_positions_snapshot = [body.pos.to_list() for body in self.bodies]
         self.position_history.append(initial_positions_snapshot)
+        sim_hist = [copy.deepcopy(self.bodies)]
         
         for step_num in range(num_simulation_steps):
             if num_simulation_steps > 100 and step_num > 0 and step_num % (num_simulation_steps // 20) == 0:
@@ -138,14 +146,25 @@ class Simulation:
             
             current_positions_snapshot = [body.pos.to_list() for body in self.bodies]
             self.position_history.append(current_positions_snapshot)
+            sim_hist.append(copy.deepcopy(self.bodies))
             
+            # Check if dump timer has been met
+            if (time.time() - prev_time >= SimIO.MIN_DUMP_TIME):
+                print("Dumping Data")
+                SimIO.dump_history_pickle(sim_hist, "Placeholder", prev_step +1, step_num)
+                prev_step = step_num
+                prev_time = time.time()
+                sim_hist = []
+        
+        print("Dumping Data")
         print("Simulation complete.")
+        SimIO.dump_history_pickle(sim_hist, "Placeholder", prev_step +1, num_simulation_steps-1)
         return np.array(self.position_history)
 
 if __name__ == "__main__":
     print("Simulation.py example using months and km/s:")
     try:
-        sun = Planetary_Body("Sun", 333000.0, Vector3(0,0,0), Vector3(0,0,0))
+        sun = Planetary_Body(333000.0, Vector3(0,0,0), Vector3(0,0,0), "Sun")
         # Earth's average orbital speed is ~29.78 km/s
         earth = Planetary_Body("Earth", 1.0, Vector3(1.0,0,0), Vector3(0,29.78,0))
 

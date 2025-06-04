@@ -1,7 +1,7 @@
 # Driver.py
 from Body import Planetary_Body, Vector3
 from Simulation import Simulation 
-from Visualizer import animate_simulation
+from Visualizer import animate_simulation, anim_data
 
 def main():
     SIMULATION_DURATION_YEARS = 10.0  # Total duration in years
@@ -53,7 +53,9 @@ def main():
     print("Attempting to animate simulation...")
     body_names = [body.name for body in simulation_instance.bodies]
     body_masses = [body.mass for body in simulation_instance.bodies]
+    data = anim_data("Placeholder")
     animate_simulation(position_history_array, body_names, body_masses)
+    #animate_simulation(data[0], data[1], data[2])
 
 if __name__ == '__main__':
     main()
