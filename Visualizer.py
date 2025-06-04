@@ -84,7 +84,7 @@ def animate_simulation(position_history, names, masses):
 
     color_assignment_index = 0
     for name in names:
-        if name.lower() == 'sun': # Case-insensitive check for "Sun"
+        if 'sun' in name.lower(): # Case-insensitive check for "Sun"
             plot_colors.append('yellow')
         else:
             if distinct_colors: # Check if the list is not empty
