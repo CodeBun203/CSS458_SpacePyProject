@@ -21,15 +21,23 @@ In this file, there was a total of 10 different simulations. Seven out of ten te
 The first three tests lists have the duration of 10,000 years, while everything below is have the duration set to 100 years. These tests were conducting:
 
 **Removed One Body:** Jupiter was removed.
+
 **Removed Two Bodies:** Jupiter and Venus were removed.
+
 **Perpendicular Planes:** Sun stays in the same place. Mercury's orbit plane stays the same. Venus's orbit plane rotates on a 90 degree angle. So on and so forth. 
 
 **Evenly Distribution of Sun's Mass:** The Sun's Mass is evenly shared to all of the other planets.
+
 **Random Masses:** Using a random number with 4 number float point generator, all bodies have different masses. Note that the random is already set in when the planets are initialized. 
+
 **Swapped Places:** All of the planets, expect the Sun, swap places. Each time you run this sim, the 'random' module is called so no two runs will be the same.
+
 **Random Velocities:** Same principles as the 'Swapped Places' simulation, expect you're changing the velocity of all the planets expect the Sun. 
+
 **Lagrange Stability:** We wanted to answer the question:"How does the distance from both bodies change over time?" For this simulation, there's only four bodies: Sun, Earth, Small Astroid, and Jupiter. 
+
 **Lagrange Larger Mass Body:** Same principle "Lagrange Stability" but the Small Astroid's mass has been changed to Jupiter's Mass. 
+
 **Two Suns:** Just like the name suggests, a second sun is labeled. All of the planets will stay the same. 
 
 ### ChloeDriver.py
