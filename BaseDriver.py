@@ -4,7 +4,7 @@ from Simulation import Simulation
 from Visualizer import animate_simulation, anim_data
 
 def main():
-    SIMULATION_DURATION_YEARS = 10.0  # Total duration in years
+    SIMULATION_DURATION_YEARS = 10000.0  # Total duration in years
     TIME_STEP_MONTHS = .1           # Simulation time step in months (e.g., 0.1 months ~ 3 days)
                                      # Or use daily steps: (1.0 / (365.25 / 12.0)) for 1 day in months
 
