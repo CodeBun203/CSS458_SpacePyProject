@@ -1,10 +1,11 @@
 # Driver.py
+import time
 from Body import Planetary_Body, Vector3
 from Simulation import Simulation 
-from Visualizer import animate_simulation, anim_data
+from Visualizer import animate_simulation, anim_data, run_anim
 
 def main():
-    SIMULATION_DURATION_YEARS = 10.0  # Total duration in years
+    SIMULATION_DURATION_YEARS = 100000.0  # Total duration in years
     TIME_STEP_MONTHS = .1           # Simulation time step in months (e.g., 0.1 months ~ 3 days)
                                      # Or use daily steps: (1.0 / (365.25 / 12.0)) for 1 day in months
 
@@ -36,14 +37,15 @@ def main():
 
     simulation_instance = Simulation(
         list_of_planetary_bodies=list_of_bodies,
-        time_step_months=TIME_STEP_MONTHS
+        time_step_months=TIME_STEP_MONTHS,
+        name = "SolarSystemBase"
     )
-
+    temp_time = time.time()
     print(f"Starting simulation from Driver.py (duration: {SIMULATION_DURATION_YEARS} years, step: {TIME_STEP_MONTHS:.4f} months)...")
     position_history_array = simulation_instance.run_simulation(
         total_duration_years=SIMULATION_DURATION_YEARS
     )
-    print("Simulation finished.")
+    print(f"Simulation finished. Elapsed time: {time.time() - temp_time}")
 
     print("\nFinal states of bodies (Pos in AU, Vel in km/s):")
     for body in simulation_instance.bodies:
@@ -53,6 +55,7 @@ def main():
     print("Attempting to animate simulation...")
     body_names = [body.name for body in simulation_instance.bodies]
     body_masses = [body.mass for body in simulation_instance.bodies]
+
     data = anim_data("Placeholder")
     animate_simulation(data[0], data[1], data[2])
 

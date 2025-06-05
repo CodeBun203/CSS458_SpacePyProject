@@ -67,6 +67,7 @@ class Simulation:
         import SimIO
         import copy
         prev_time = time.time()
+        start_time = prev_time
         prev_step = -1
         
         
@@ -87,7 +88,7 @@ class Simulation:
         
         for step_num in range(num_simulation_steps):
             if num_simulation_steps > 100 and step_num > 0 and step_num % (num_simulation_steps // 20) == 0:
-                 print(f"  Processed step {step_num}/{num_simulation_steps} ({(step_num/num_simulation_steps*100):.0f}%)")
+                 print(f"  Processed step {step_num}/{num_simulation_steps} ({(step_num/num_simulation_steps*100):.0f}%), Elapsed time: {(time.time() - start_time):.0f}")
             
             y0_pos_AU = [body.pos.copy() for body in self.bodies]       # AU
             y0_vel_kms = [body.velocity.copy() for body in self.bodies] # km/s
