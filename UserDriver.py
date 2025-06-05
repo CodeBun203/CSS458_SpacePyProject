@@ -26,7 +26,7 @@ def main():
         name = SIMULATION_NAME
     )
 
-    # Run the simulation and display elapsed tim
+    # Run the simulation and display elapsed time
     start_time = time.time()
     print("Starting " + SIMULATION_NAME + f" simulation from Driver.py (duration: {SIMULATION_DURATION_YEARS} years, step: {TIME_STEP_MONTHS:.4f} months)...")
     simulation_instance.run_simulation(
