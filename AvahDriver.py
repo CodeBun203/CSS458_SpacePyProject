@@ -480,11 +480,11 @@ def remove_two_bodies():
         print(body)
     
     # Visualization
-    print("Attempting to animate simulation...")
-    body_names = [body.name for body in simulation_instance.bodies]
-    body_masses = [body.mass for body in simulation_instance.bodies]
-    data = anim_data("RemoveTwobodies")
-    animate_simulation(data[0], data[1], data[2])
+    # print("Attempting to animate simulation...")
+    # body_names = [body.name for body in simulation_instance.bodies]
+    # body_masses = [body.mass for body in simulation_instance.bodies]
+    # data = anim_data("RemoveTwobodies")
+    # animate_simulation(data[0], data[1], data[2])
 
 def remove_one_body():
     SIMULATION_DURATION_YEARS = 10000.0  # Total duration in years
@@ -542,31 +542,31 @@ def main():
 # Mass in Earth Masses, Position in AU, Velocity in km/s 
 # For each test, values are changed
 
-# For these tests: the duration is 10,000 years
-# # Jupiter is removed
-#     remove_one_body()
-# Jupiter and Venus are removed
+#For these tests: the duration is 10,000 years
+# Jupiter is removed
+    remove_one_body()
+#Jupiter and Venus are removed
     remove_two_bodies()
-# # Perpendicular Planes
-#     perpendicular_planes()
+# Perpendicular Planes
+    perpendicular_planes()
 
-# # For these tests: the duration is 100 years
-# # Sun's Mass is distributed to the other planets
-#     distribute_sun_mass()
-# # Randomizing masses
-#     random_masses()
-# # Swapping placing of planets
-#     swap_body_pos()
-# # Random Velocities
-#     random_velocities()
-# # Lagrange Stability
-# # How does the distance from both bodies change over time?
-#     lagrange_stable()
-# # Lagrange points with a larger mass (using Jupiter's Mass)
-#     lagrange_large()
-# # Two Suns
-#     two_suns()
-
+# For these tests: the duration is 100 years
+# Sun's Mass is distributed to the other planets
+    distribute_sun_mass()
+# Randomizing masses
+    random_masses()
+#Swapping placing of planets
+    swap_body_pos()
+# Random Velocities
+    random_velocities()
+# Lagrange Stability
+# How does the distance from both bodies change over time?
+    lagrange_stable()
+# Lagrange points with a larger mass (using Jupiter's Mass)
+    lagrange_large()
+# Two Suns
+    two_suns()
 
 if __name__ == '__main__':
     main()
+    
