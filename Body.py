@@ -1,3 +1,7 @@
+# Body.py
+import numpy as np
+import csv
+
 AU_TO_KM = 149597870.691
 MONTH_TO_SECONDS = 2629800
 AU_PER_MONTH_TO_KM_PER_SECOND = AU_TO_KM / MONTH_TO_SECONDS
@@ -8,9 +12,10 @@ DAYS_PER_MONTH = 365.25 / 12.0
 _G_ASTRO_DAYS_REF = (0.017202098950233253**2) / 333000.0 # Approx 8.886e-10
 
 # Gravitational constant in AU^3/(MEarth * month^2)
-# Scipy constants gives G in m^3/(kg * s^2),:
 G_ASTRO_MONTHS = _G_ASTRO_DAYS_REF * (DAYS_PER_MONTH**2) # Approx 8.231e-7
-CONVERT_ACCEL_AU_MONTH2_TO_KM_S_MONTH = 1.0 / KM_PER_S_TO_AU_PER_MONTH
+
+# Converts acceleration from AU/month^2 to km/(s*month)
+CONVERT_ACCEL_AU_MONTH2_TO_KM_S_MONTH = AU_PER_MONTH_TO_KM_PER_SECOND
 
 
 #==============================================================================
@@ -29,18 +34,12 @@ def write_system(system, file_name):
     Output:
     * None
     """
-    import csv
-    
     with open(file_name, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        # Write a header
-        writer.writerow(['Name', 'Mass', 'Pos.x', 'Pos.y', 'Pos.z', 'Vel.x', \
-                         'Vel.y', 'Vel.z'])
-        # Write the system
-        for i in range(0, len(system)):
-            writer.writerow(system[i].as_type_list())
-
-
+        writer.writerow(['Name', 'Mass', 'Pos.x', 'Pos.y', 'Pos.z', 'Vel.x',
+                         'Vel.y', 'Vel.z']) # Assuming Mass is MEarth, Pos is AU, Vel is km/s
+        for body_item in system: # Changed from indexed loop for clarity
+            writer.writerow(body_item.as_type_list())
 
 #------------------------------ CSV Read Method -------------------------------
 def read_system(file_name):
@@ -53,31 +52,37 @@ def read_system(file_name):
     Output:
     * A list of bodies that were stored in the file
     """
-    import csv
-    
-    with open(file_name, newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        # Skip the header
-        next(reader) 
-        # Read the system
-        system = []
-        for row in reader:
-            if(len(row) >= 8):
-                new_name = row[0]
-                new_mass = row[1]
-                new_pos = Vector3(row[2], row[3], row[4])
-                new_vel = Vector3(row[5], row[6], row[7])
-                new_body = Planetary_Body(new_mass, new_pos, new_vel, new_name)
-                system.append(new_body)
-            else:
-                print("Encountered a row with too little data to make a body")
-                print(row)
-        return system
-
-
+    system = []
+    try:
+        with open(file_name, 'r', newline='') as csvfile: # Added 'r' mode
+            reader = csv.reader(csvfile)
+            try:
+                header = next(reader) # Skip header
+            except StopIteration:
+                print(f"Warning: CSV file '{file_name}' is empty or has no header.")
+                return system 
+            
+            for row in reader:
+                if len(row) >= 8:
+                    # Assuming Planetary_Body and Vector3 constructors handle float conversion
+                    new_name = row[0]
+                    new_mass = row[1] # MEarth
+                    new_pos = Vector3(row[2], row[3], row[4]) # AU
+                    new_vel = Vector3(row[5], row[6], row[7]) # km/s
+                    # Ensure constructor keywords match your Planetary_Body.__init__
+                    new_body = Planetary_Body(mass_val=new_mass,
+                                              pos_vector=new_pos,
+                                              vel_vector=new_vel,
+                                              name_val=new_name)
+                    system.append(new_body)
+                elif any(field.strip() for field in row): # Check if row is not just empty
+                    print(f"Warning: Encountered a row in '{file_name}' with too few data fields: {row}")
+    except FileNotFoundError:
+        print(f"Error: File '{file_name}' not found.")
+    return system
 
 #-------------------------- Body Gravitational Force --------------------------
-def get_gravitatonal_force_euler(body1, body2):
+def get_gravitatonal_force_euler(body1, body2): # Removed delta_time as it wasn't used
     """Get the gravitational force between 2 bodies based on the elasped 
     time using eulers method
     
@@ -92,47 +97,36 @@ def get_gravitatonal_force_euler(body1, body2):
     Uses the law of universal gravitation to determine the force applied to 
     both bodies from their current positions.
     """
-    if isinstance(body1, Planetary_Body) and isinstance(body2, Planetary_Body): # Corrected basic check
-        import scipy.constants as sp
-        import numpy as np
+    if isinstance(body1, Planetary_Body) and isinstance(body2, Planetary_Body):
+        import scipy.constants as sp # Local import as per original style
         
-        # Law of Universal Gravitaion Variables
-        m1 = float(body1.mass) # Ensure float for calculation
-        m2 = float(body2.mass) # Ensure float for calculation
-        G = _G_ASTRO_DAYS_REF
-        r_val = get_body_distance(body1, body2)
+        m1 = float(body1.mass) 
+        m2 = float(body2.mass) 
+        G_si = sp.gravitational_constant 
+        r_val = get_body_distance(body1, body2) # Returns AU
 
-        # Check if r_val is a number
         if not isinstance(r_val, (int, float)):
-            # return a default if get_body_distance fails
             print(f"Warning: Could not calculate distance for {body1.name} and {body2.name}, get_body_distance returned: {r_val}")
             return 0.0
-
+        
         # Handle case of 2 bodies at the same position
         if np.isclose(r_val, 0.0):
             F = 0.0
-        # Law of Universal Gravitaion Equation
         else:
-            F = ( ( G * m1 * m2 ) / ( r_val ** 2 ) )
-        
-        # Return the force
-        return F  
+            # Law of Universal Gravitaion Equation
+            F = ( ( G_si * m1 * m2 ) / ( r_val ** 2 ) ) 
+
+        return F 
     
     # One of the parametes was not a body
     else:
         if not isinstance(body1, Planetary_Body):
-            raise ValueError("get_attraction_force(body1, body2) " + \
-                             "requires that the first parameter be of " + \
-                                 "type Planetary_Body")
-        else: # Implies body2 is not a Planetary_Body
-            raise ValueError("get_attraction_force(body1, body2) " + \
-                             "requires that the second parameter be of" + \
-                                 " type Planetary_Body")
+            raise TypeError("get_gravitatonal_force_euler requires body1 to be Planetary_Body")
+        else: 
+            raise TypeError("get_gravitatonal_force_euler requires body2 to be Planetary_Body")
 
 def partial_step(vec1, vec2, time_step):
     return (vec1 + vec2) * time_step
-
-
 
 #------------------------------- Body Distance --------------------------------
 def get_body_distance(body1, body2):
@@ -148,32 +142,30 @@ def get_body_distance(body1, body2):
     Will raise an error if either of the arguments are not of the 
     Planetary_Body class.
     """
-    if isinstance(body1, Planetary_Body) \
-    and isinstance(body2, Planetary_Body): 
-        import numpy as np 
-        componenets = body1.pos - body2.pos # There is no subtraction operator for Planetary_Body
-        distance = np.sqrt((componenets.x ** 2) + \
-                           (componenets.y ** 2) + \
-                           (componenets.z ** 2))
-        return distance
-    # One of the parametes was not a body
+    if isinstance(body1, Planetary_Body) and isinstance(body2, Planetary_Body):
+        components_vector = body1.pos - body2.pos 
+        try:
+            # Magnitude of the difference vector
+            distance = np.sqrt(
+                float(components_vector.x)**2 + 
+                float(components_vector.y)**2 + 
+                float(components_vector.z)**2
+            )
+            return distance
+        except (AttributeError, TypeError) :
+            print(f"Warning: Error in distance calculation components for {body1.name}, {body2.name}")
+            return 0.0
     else:
         if not isinstance(body1, Planetary_Body): 
-            raise ValueError("get_body_distance(body1, body2) requires" + \
-                             " that the first parameter be of type " + \
-                             "Planetary_Body")
-        else:
-            raise ValueError("get_body_distance(body1, body2) requires" + \
-                             " that the second parameter be of type " + \
-                             "Planetary_Body")
-
+            raise TypeError("get_body_distance requires body1 to be Planetary_Body")
+        else: 
+            raise TypeError("get_body_distance requires body2 to be Planetary_Body")
 
 #==============================================================================
 #                                  Vector3 Class
 #==============================================================================
 class Vector3:
-    
-    #--------------------------- Constructor Method ---------------------------
+
     def __init__(self, x_val = 0.0, y_val = 0.0, z_val = 0.0):
         """Initailize the viector 3 with 3 values.
         
@@ -185,18 +177,16 @@ class Vector3:
         Output:
         * None
         """
-        self.x = float(x_val) 
+        self.x = float(x_val)
         self.y = float(y_val)
         self.z = float(z_val)
     
-    
-    
-    #--------------------------- Comparison Method ----------------------------
-    def __eq__(self, other):
+    #--------------------------- Comparison Method ----------------------------    
+    def __eq__(self, scalar):
         """Compare if 2 vectors are equal
         
         Method Arguments:
-        * other: A Vector3
+        * scalar: A Vector3
 
         Output:
         * True: the 2 vectors hold the same data
@@ -204,17 +194,13 @@ class Vector3:
         
         uses numpy isclos() to compare floats
         """
-        if isinstance(other, Planetary_Body):
-            import numpy as np
-            tx = np.isclose(self.x, other.x)
-            ty = np.isclose(self.y, other.y)
-            tz = np.isclose(self.z, other.z)
-            return tx and ty and tz
+        if isinstance(scalar, Vector3):
+            return (np.isclose(self.x, scalar.x) and
+                    np.isclose(self.y, scalar.y) and
+                    np.isclose(self.z, scalar.z))
         return False
     
-    
-    
-    #--------------------------- Arithmetic Methods ---------------------------    
+    #--------------------------- Arithmetic Methods ---------------------------        
     def __add__(self, scalar):
         """The sum of a scalar or Vector3 and this Vector3.
         
@@ -231,8 +217,7 @@ class Vector3:
         to the same component of the input Vector3. (x + x), (y + y), (z + z).
         """
         if isinstance(scalar, Vector3): 
-            return Vector3(self.x + scalar.x, self.y + scalar.y, self.z + \
-                           scalar.z)
+            return Vector3(self.x + scalar.x, self.y + scalar.y, self.z + scalar.z)
         else:
             return Vector3(self.x + scalar, self.y + scalar, self.z + scalar)
     
@@ -253,11 +238,10 @@ class Vector3:
         (z - z).
         """
         if isinstance(scalar, Vector3): 
-            return Vector3(self.x - scalar.x, self.y - scalar.y, self.z - \
-                           scalar.z)
+            return Vector3(self.x - scalar.x, self.y - scalar.y, self.z - scalar.z)
         else:
             return Vector3(self.x - scalar, self.y - scalar, self.z - scalar)
-    
+
     def __mul__(self, scalar):
         """The product of a scalar or Vector3 and this Vector3.
         
@@ -273,11 +257,11 @@ class Vector3:
         If the input was a Vector3: Each component this Vector3 are multiplied 
         with the same component of the input Vector3. (x * x), (y * y), (z * z)
         """
-        if isinstance(scalar, Vector3):
-            return Vector3(self.x * scalar.x, self.y * scalar.y, self.z * \
-                           scalar.z)
+        if isinstance(scalar, Vector3): # Component-wise
+            return Vector3(self.x * scalar.x, self.y * scalar.y, self.z * scalar.z)
         else:
             return Vector3(self.x * scalar, self.y * scalar, self.z * scalar)
+
 
     def __truediv__(self, scalar):
         """The quotient of a scalar or Vector3 and this Vector3.
@@ -294,17 +278,27 @@ class Vector3:
         If the input was a Vector3: Each component this Vector3 are divided 
         from the same component of the input Vector3. (x / x), (y / y), (z / z)
         """
-        if isinstance(scalar, Vector3): # Avoid division by zero
+        if isinstance(scalar, Vector3): 
             if scalar.x == 0 or scalar.y == 0 or scalar.z == 0:
                 raise ValueError("Component-wise division by Vector3 containing zero.")
-            return Vector3(self.x / scalar.x, self.y / scalar.y, self.z / \
-                           scalar.z)
+            return Vector3(self.x / scalar.x, self.y / scalar.y, self.z / scalar.z)
         else:
-             if scalar == 0:
-                raise ValueError("Division by zero scalar.")
-             return Vector3(self.x / scalar, self.y / scalar, self.z / scalar)
-    
-    #----------------------------- Getter Methods -----------------------------
+            if scalar == 0:
+                raise ValueError("Vector3 division by zero scalar.")
+            return Vector3(self.x / scalar, self.y / scalar, self.z / scalar)
+            
+    def magnitude(self):
+        """Return the magnitude of this vector
+        
+        Method Arguments:
+        * None
+
+        Output:
+        * The magnitude of this Vector3.
+        """
+        return np.sqrt( ( self.x ** 2 ) + ( self.y ** 2 ) + ( self.z ** 2) ) 
+
+#----------------------------- Getter Methods -----------------------------
     def normalize(self):
         """Return a normalied version of this Vector3.
         
@@ -322,41 +316,39 @@ class Vector3:
             return Vector3(0.0, 0.0, 0.0)
         return Vector3(self.x / mag, self.y / mag, self.z / mag)
 
-    def magnitude(self):
-        """Return the magnitude of this vector
+    def to_list(self): 
+        """Return list of this Vector3.
         
         Method Arguments:
         * None
-
-        Output:
-        * The magnitude of this Vector3.
         """
-        import numpy as np
-        return np.sqrt( ( self.x ** 2 ) + ( self.y ** 2 ) + ( self.z ** 2) ) 
-
-    # Added to_list method for Simulation.py position history
-    def to_list(self):
         return [self.x, self.y, self.z]
-
-    # Added copy method for Simulation.py to avoid modifying original vectors during RK steps
-    def copy(self):
+    
+    def copy(self): 
+        """Return copy of this Vector3.
+        
+        Method Arguments:
+        * None
+        """
         return Vector3(self.x, self.y, self.z)
+    
+    def __str__(self): 
+        """Return formatted string this Vector3.
+        
+        Method Arguments:
+        * None
+        """
+        return f"Vector3(x={self.x:.4g}, y={self.y:.4g}, z={self.z:.4g})"
 
-    # Added __str__ for easier debugging
-    def __str__(self):
-        return f"Vector3({self.x}, {self.y}, {self.z})"
 
 #==============================================================================
 #                             Planetary_Body Class
 #==============================================================================
 class Planetary_Body: 
-
-    #---------------------------- Static Variables ----------------------------
-    km_per_s_to_AU_per_month = KM_PER_S_TO_AU_PER_MONTH
+    km_per_s_to_AU_per_month = KM_PER_S_TO_AU_PER_MONTH 
     
-    #--------------------------- Constructor Method ---------------------------
-    def __init__(self, mass_val = 0.0, pos_vector = Vector3(), 
-                 vel_vector = Vector3(), name_val = ""):
+    def __init__(self, mass_val = 0.0, pos_vector = None, 
+                 vel_vector = None, name_val = ""):
         """Inialize a gravitational body.
         
         Method Arguments:
@@ -369,11 +361,11 @@ class Planetary_Body:
         * None
         """
         self.name = str(name_val)
-        self.mass = float(mass_val) 
-        self.pos = pos_vector
-        self.velocity = vel_vector
+        self.mass = float(mass_val) # MEarth
+        self.pos = pos_vector if pos_vector is not None else Vector3() # AU
+        self.velocity = vel_vector if vel_vector is not None else Vector3() # km/s
     
-    def __eq__(self, other):
+    def __eq__(self, scalar):
         """Compare if 2 bodies are equal
         
         Method Arguments:
@@ -385,29 +377,33 @@ class Planetary_Body:
         
         uses numpy isclos() to compare floats
         """
-        if isinstance(other, Planetary_Body):
-            import numpy as np
-            m = np.isclose(self.mass, other.mass)
-            p = self.pos = other.pos
-            v = self.velocity = other.velocity
-            n = self.name == other.name
+        if isinstance(scalar, Planetary_Body):
+            m = np.isclose(self.mass, scalar.mass)
+            p = (self.pos == scalar.pos)
+            v = (self.velocity == scalar.velocity)
+            n = (self.name == scalar.name)
             return m and p and v and n
         return False
     
     @staticmethod
     def calculate_gravitational_force_exerted_by_on(acting_body, target_body):
-        import numpy as np 
+        """Calculates force BY acting_body ON target_body. Uses G_ASTRO_MONTHS.
+        Returns force in MEarth * AU / month^2.
+        """
         r_vector = acting_body.pos - target_body.pos 
-        dist_sq = r_vector.x**2 + r_vector.y**2 + r_vector.z**2 
+        dist_sq = float(r_vector.x)**2 + float(r_vector.y)**2 + float(r_vector.z)**2 
         if dist_sq == 0:
             return Vector3(0, 0, 0) 
         dist = np.sqrt(dist_sq)
         if dist == 0: 
             return Vector3(0,0,0)
-        force_scalar_part = G_ASTRO_MONTHS * acting_body.mass * target_body.mass / (dist * dist_sq)
+        
+        # F_vec = (G * M1 * M2 / r^3) * r_vector
+        force_scalar_part = G_ASTRO_MONTHS * float(acting_body.mass) * float(target_body.mass) / (dist_sq * dist)
         force_vector = r_vector * force_scalar_part
         return force_vector
     
+    @staticmethod # Added @staticmethod
     def calculate_gravity_field(exerting_body, target_body):
         """Returns the acceleration due to gravity an exerting object applies 
         to a target object.
@@ -432,7 +428,7 @@ class Planetary_Body:
         import scipy.constants as sp
         
         # Gravitational Field Vars
-        G = _G_ASTRO_DAYS_REF
+        G = G_ASTRO_MONTHS
         r = get_body_distance(target_body, exerting_body)
         
         #Gravitational Field Equation
@@ -445,8 +441,7 @@ class Planetary_Body:
         
         return accel
 
-#----------------------------- Getter Methods -----------------------------    
-    def as_type_list(self): 
+    def as_type_list(self):
         """Get the body data as a list.
         
         Method Arguments:
@@ -458,17 +453,16 @@ class Planetary_Body:
         Values are in the order of Name, Mass, Pos.x, Pos.y, Pos.z, Vel.x, 
         Vel.y, Vel.z.
         """
-        return [self.name, self.mass, self.pos.x, self.pos.y, self.pos.z, \
+        return [self.name, self.mass, self.pos.x, self.pos.y, self.pos.z,
                 self.velocity.x, self.velocity.y, self.velocity.z]
     
-    def get_gravitatonal_acceleration_rk4(self, body_index, system, \
-                                          delta_time):
+    def get_gravitatonal_acceleration_rk4(self, body_index, system, delta_time):
         """
-        
+        Original RK4 method.
         """
         import scipy.constants as sp
         
-        G = _G_ASTRO_DAYS_REF
+        G = sp.gravitational_constant
         accel = Vector3(0.0, 0.0, 0.0)
         
         for index, external_body in enumerate(system):
@@ -502,7 +496,7 @@ class Planetary_Body:
         
         return accel
     
-    def update_pos(self, delta_time): 
+    def update_pos(self, delta_time):
         """Update the body's position based on it's velocity.
         
         Method Arguments:
@@ -511,8 +505,7 @@ class Planetary_Body:
         Output:
         * None
         """
-        self.pos = self.pos + (self.velocity * delta_time * \
-        Planetary_Body.km_per_s_to_AU_per_month)
+        self.pos = self.pos + (self.velocity * delta_time * Planetary_Body.km_per_s_to_AU_per_month)
         
     def apply_force(self, force_vector, delta_time):
         """Apply a force on the body.
@@ -536,12 +529,12 @@ class Planetary_Body:
 
         """
         if self.mass == 0:
-            acceleration = Vector3(0,0,0) # Funny how this isn't true (photons)
+            acceleration = Vector3(0,0,0)
         else:
             acceleration = force_vector / self.mass 
         self.velocity = self.velocity + (acceleration * delta_time) 
         
-    def apply_acceleration(self, accel, delta_time): 
+    def apply_acceleration(self, accel_kms_month, delta_time):
         """Accelrate a body
         
         Method Arguments:
@@ -557,38 +550,67 @@ class Planetary_Body:
             Velocity = Initial velocity + Acceleration * Duration of Force
             
         """
-        self.velocity = self.velocity + (accel * delta_time) 
+        self.velocity = self.velocity + (accel_kms_month * delta_time) 
 
-    # Added __str__ for debugging and readability
     def __str__(self):
-        return (f"PlanetaryBody(Name: {self.name}, Mass: {self.mass}, "
-                f"Pos: {self.pos}, Vel: {self.velocity})")
-
+        return (f"PlanetaryBody(Name: {self.name}, Mass: {self.mass:.3g} MEarth, "
+                f"Pos: {self.pos} AU, Vel: {self.velocity} km/s)")
+    
 
 #==============================================================================
 #                                  Test Code
 #==============================================================================
 if __name__ == "__main__": 
-    print("Package Functions:")
-    print("1. Body distance")
-    print("2. Gravitational Force Euler")
-    print("4. Write CSV") 
-    print("5. Read CSV")
+    print("Body.py - Phase 1 Refinements Test")
+    print(f"G_ASTRO_MONTHS = {G_ASTRO_MONTHS:.4e} AU^3 MEarth^-1 month^-2")
+    print(f"KM_PER_S_TO_AU_PER_MONTH = {KM_PER_S_TO_AU_PER_MONTH:.6f}")
+    print(f"CONVERT_ACCEL_AU_MONTH2_TO_KM_S_MONTH = {CONVERT_ACCEL_AU_MONTH2_TO_KM_S_MONTH:.6f}")
 
-    print("\nNEW: Testing calculate_gravitational_force_exerted_by_on")
-    try:
-        sun_test = Planetary_Body(mass_val=333000.0, 
-                                  pos_vector=Vector3(0.0,0.0,0.0), 
-                                  vel_vector=Vector3(0.0,0.0,0.0), 
-                                  name_val="TestSun")
-        earth_test = Planetary_Body(mass_val=1.0, 
-                                    pos_vector=Vector3(1.0,0.0,0.0), 
-                                    vel_vector=Vector3(0.0,29.78,0.0), 
-                                    name_val="TestEarth")
-        force_on_earth = Planetary_Body.calculate_gravitational_force_exerted_by_on(sun_test, earth_test)
-        print(f"Force by Sun on Earth (MEarth*AU/month^2): {force_on_earth.x:.3e}, {force_on_earth.y:.3e}, {force_on_earth.z:.3e}")
-        print(f"Expected force magnitude on Earth: ~-0.274 MEarth*AU/month^2 (along x-axis)")
-    except Exception as e:
-        print(f"Error during new method test: {e}")
-        import traceback 
-        traceback.print_exc()
+    print("\nTesting Vector3 equality:")
+    v1 = Vector3(1.00000001, 2.0, 3.0)
+    v2 = Vector3(1.0, 2.0, 3.0)
+    v3 = Vector3(1.0, 2.5, 3.0)
+    print(f"v1 == v2 (expect True): {v1 == v2}")
+    print(f"v1 == v3 (expect False): {v1 == v3}")
+
+    print("\nTesting Planetary_Body equality:")
+    b1 = Planetary_Body(mass_val=1.0, pos_vector=v1, vel_vector=v2, name_val="Body1")
+    b2 = Planetary_Body(mass_val=1.00000001, pos_vector=v2, vel_vector=v1, name_val="Body1")
+    b3 = Planetary_Body(mass_val=1.0, pos_vector=v1, vel_vector=v3, name_val="Body1")
+    print(f"b1 == b2 (expect True due to np.isclose): {b1 == b2}")
+    print(f"b1 == b3 (expect False): {b1 == b3}")
+
+    print("\nTesting calculate_gravity_field:")
+    sun_test = Planetary_Body(mass_val=333000.0, pos_vector=Vector3(0.0,0.0,0.0), name_val="Sun")
+    earth_test = Planetary_Body(mass_val=1.0, pos_vector=Vector3(1.0,0.0,0.0), name_val="Earth")
+    
+    accel_on_earth = Planetary_Body.calculate_gravity_field(sun_test, earth_test)
+    print(f"Calculated Accel on Earth by Sun: {accel_on_earth} AU/month^2")
+    expected_accel_mag = G_ASTRO_MONTHS * sun_test.mass / (1.0**2)
+    print(f"Expected accel magnitude: ~{expected_accel_mag:.4e} AU/month^2 (towards Sun, so x should be negative)")
+
+    print("\nTesting calculate_gravitational_force_exerted_by_on:")
+    force_on_earth = Planetary_Body.calculate_gravitational_force_exerted_by_on(sun_test, earth_test)
+    print(f"Calculated Force on Earth by Sun: {force_on_earth} MEarth*AU/month^2")
+    expected_force_mag = G_ASTRO_MONTHS * sun_test.mass * earth_test.mass / (1.0**2)
+    print(f"Expected force magnitude: ~{expected_force_mag:.4e} MEarth*AU/month^2 (towards Sun)")
+
+    print("\nTesting get_body_distance:")
+    dist = get_body_distance(sun_test, earth_test)
+    print(f"Distance Sun-Earth: {dist} AU (Expected: 1.0 AU)")
+
+    # Test write_system and read_system
+    test_system_out = [sun_test, earth_test]
+    csv_test_file = "temp_body_test.csv"
+    print(f"\nWriting to {csv_test_file}...")
+    write_system(test_system_out, csv_test_file)
+    print(f"Reading from {csv_test_file}...")
+    read_back_system = read_system(csv_test_file)
+    print("Read back system:")
+    for i, body in enumerate(read_back_system):
+        print(f"  Body {i}: {body}")
+        print(f"  Matches original? {body == test_system_out[i]}")
+    
+    import os
+    if os.path.exists(csv_test_file):
+        os.remove(csv_test_file)
