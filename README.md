@@ -31,21 +31,25 @@ if __name__ == '__main__':
 ```
 
 ## Driver Files
-There are two different versions of the driver file; UserDriver, and [MemberName]Driver. UserDriver requires a CSV file with your data to be read into the driver, while the other versions hardcode the Planetary_Body data into the file. To visualize your simulation, these are the steps you need to take to have it run based on the version of driver you wish to use:
+There are two different versions of the driver file; UserDriver, and [MemberName]Driver. UserDriver is the default driver and will load a simulation based on the specified CSV file. The [MemberName]Drivers are curated sets of Simulations desinged to run by each Tea member when collecting data from our model. To visualize your simulation, these are the steps you need to take to have it run based on the version of driver you wish to use:
 
 **UserDriver:** 
 Change the visualization variable from 'False' to 'True'. 
 
 **Hard-Code (AvahDriver):** 
-* In the section of the function below, change the name to something meaningful to what you're using this simulation for. 
+* Change the visualization variable from 'False' to 'True' for the simulation you are wanting to see.
 ```
-simulation_instance = Simulation(
-    list_of_planetary_bodies=list_of_bodies,
-    time_step_months=TIME_STEP_MONTHS,
-    name = "NameofYourSimulation" # You will change the name here inside the quotations
+def remove_one_body():
+    # Adjust these variables to adjust simulation
+    SIMULATION_DURATION_YEARS = 10000.0
+    TIME_STEP_MONTHS = .1
+    STARTING_DATA_FOLDER = "StartingData"
+    FILE_NAME = "RemoveOneBody.csv"
+    SIMULATION_NAME = "RemoveOneBody"
+    DISPLAY_ANIMATION = False                    <----- here
 )
 ```
-* Uncomment out the code under 'Visualization' and change the name of the file to the same name you used in the other section. 
+* Move the Driver file out of the Custom Driver folder into the same place as UserDriver.
 ```
 #Visualization
     print("Attempting to animate simulation...")
@@ -54,4 +58,4 @@ simulation_instance = Simulation(
     data = anim_data("NameofYourSimulation") # This should be the exact same as what you used up top, including the quotations
     animate_simulation(data[0], data[1], data[2])
 ```
-* Run your driver like normal.
+* Run the [Member]Driver.
