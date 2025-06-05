@@ -1,4 +1,4 @@
-# CSS458_SpacePyProject User Manual
+# Pylanetary User's Manual
 
 ## Team SpacePy
 - Avah Afshari
