@@ -27,7 +27,7 @@ simulation_instance = Simulation(
     print("Attempting to animate simulation...")
     body_names = [body.name for body in simulation_instance.bodies]
     body_masses = [body.mass for body in simulation_instance.bodies]
-    data = anim_data("NameofYourSimulation") # This should be the exact same as what you used up top including the quotations
+    data = anim_data("NameofYourSimulation") # This should be the exact same as what you used up top, including the quotations
     animate_simulation(data[0], data[1], data[2])
 ```
 * Run your driver like normal.
