@@ -1,18 +1,37 @@
-# CSS458_SpacePyProject
+# CSS458_SpacePyProject User Manual
 
 ## Prerequisites
 * VSCode (Updated to the latest version)
 * Python 3 Interpreter
 
 ## How to Run
-We recommend using VS Code for this project, as our visualization is an interactable 3D figure that IDEs like Spyder are unable to handle. When you do "plot.show()" in Spyder, the figure is interpreted as a 2D non-interactable image. 
+1. Please make sure you have the prerequisites installed.
+2. We recommend using VS Code for this project as other IDEs, such as Spyder, behave strangely when displaying animations.
+3. Open the UserDriver.py file in VSCode.
+4. Specify the filename of a file in the 'StartingData' folder that you would like to run like so:
+```
+def main():
+
+    # Adjust these variables to adjust simulation
+    SIMULATION_DURATION_YEARS = 10.0
+    TIME_STEP_MONTHS = .1
+    STARTING_DATA_FOLDER = "StartingData"
+    FILE_NAME = "Solar_System_Full_Initial.csv" <---------------
+```
+5. Run UserDriver to run the simulation. You will see an animation once it has completed.
+6. If you would like to animate past simulations using the binary data in the 'dumps' folder, open Visualizer.py and specify the name of the binary file like so:
+```
+if __name__ == '__main__':
+    run_anim("Moons")     <------------
+```
 
 ## Driver Files
-There are two different versions of the driver file. One version requires a CSV file with your data to be read into the driver, while the other version has your data hard-coded into the file. To visualize your simulation, these are the steps you need to take to have it run based on the version of driver you wish to use:
+There are two different versions of the driver file; UserDriver, and [MemberName]Driver. UserDriver requires a CSV file with your data to be read into the driver, while the other versions hardcode the Planetary_Body data into the file. To visualize your simulation, these are the steps you need to take to have it run based on the version of driver you wish to use:
 
-**CSV Read In:** Change the visualization variable from 'False' to 'True'. 
+**UserDriver:** 
+Change the visualization variable from 'False' to 'True'. 
 
-**Hard-Code:** 
+**Hard-Code (AvahDriver):** 
 * In the section of the function below, change the name to something meaningful to what you're using this simulation for. 
 ```
 simulation_instance = Simulation(
