@@ -2,7 +2,7 @@
 import time
 from Body import Planetary_Body, Vector3
 from Simulation import Simulation 
-from Visualizer import animate_simulation, anim_data
+from Visualizer import animate_simulation, anim_data, run_anim
 
 def main():
     SIMULATION_DURATION_YEARS = 100000.0  # Total duration in years
@@ -55,9 +55,10 @@ def main():
     print("Attempting to animate simulation...")
     body_names = [body.name for body in simulation_instance.bodies]
     body_masses = [body.mass for body in simulation_instance.bodies]
-    data = anim_data("Placeholder")
+    data = anim_data("SolarSystemBase")
     #animate_simulation(position_history_array, body_names, body_masses)
     animate_simulation(data[0], data[1], data[2])
 
 if __name__ == '__main__':
-    main()
+    #main()
+    run_anim("SolarSystemBase")

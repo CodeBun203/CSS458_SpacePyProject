@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib.animation import FuncAnimation
 import random
 
-def run_anim(sim_name):
+def run_anim(sim_name, overide_max_range = -1):
     """takes a folder name containg a set of pickled data representing a system
     over time and turns it into an animation
     
@@ -16,7 +16,7 @@ def run_anim(sim_name):
     * None
     """
     data = anim_data(sim_name)
-    animate_simulation(data[0], data[1], data[2])
+    animate_simulation(data[0], data[1], data[2], overide_max_range)
 
 
 def anim_data(sim_name):
@@ -62,7 +62,7 @@ def anim_data(sim_name):
     print(pos_data)
     return (pos_data, name_data, mass_data)
 
-def animate_simulation(position_history, names, masses):
+def animate_simulation(position_history, names, masses, overide_max_range = -1, block = True):
     """
     Creates and displays a 3D animation of the simulation.
 
@@ -115,19 +115,22 @@ def animate_simulation(position_history, names, masses):
         ax.legend(loc='upper right')
         
         # Determine plot limits based on the maximum extent of positions
-        if position_history.size > 0:
-            max_range = np.max(np.abs(position_history)) * 1.2 # Increased padding slightly
-            if max_range == 0: # Handle case where all positions are zero
-                max_range = 1 
+        if(overide_max_range == -1):
+            if position_history.size > 0:
+                max_range = np.max(np.abs(position_history)) * 1.0 # Increased padding slightly
+                if max_range == 0: # Handle case where all positions are zero
+                    max_range = 1 
+            else:
+                max_range = 10 # Default range if no data
+
+            ax.set_xlim([-max_range, max_range])
+            ax.set_ylim([-max_range, max_range])
+            ax.set_zlim([-max_range, max_range])
         else:
-            max_range = 10 # Default range if no data
-
-        ax.set_xlim([-max_range, max_range])
-        ax.set_ylim([-max_range, max_range])
-        ax.set_zlim([-max_range, max_range])
-
-
-            
+            ax.set_xlim([-overide_max_range, overide_max_range])
+            ax.set_ylim([-overide_max_range, overide_max_range])
+            ax.set_zlim([-overide_max_range, overide_max_range])
+            ax.view_init(elev=100, azim=0.1)
         return scatter_plots + trails
 
     def update(frame):
@@ -153,7 +156,7 @@ def animate_simulation(position_history, names, masses):
                          init_func=init, blit=False, interval=30) # interval can be adjusted
     
     #plt.tight_layout() # Adjust layout to prevent labels from overlapping
-    plt.show()
+    plt.show(block=block)
 
 
 if __name__ == '__main__':
