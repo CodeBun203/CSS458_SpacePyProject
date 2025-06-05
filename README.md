@@ -1,5 +1,10 @@
 # CSS458_SpacePyProject User Manual
 
+## Team SpacePy
+- Avah Afshari
+- Chloe Beal
+- Hayden NeSmith
+
 ## Prerequisites
 * VSCode (Updated to the latest version)
 * Python 3 Interpreter
