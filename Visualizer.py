@@ -59,7 +59,6 @@ def anim_data(sim_name):
     for planet in range(0, num_planets):
         mass_data.append(sim_hist[0, planet].mass)
     
-    print(pos_data)
     return (pos_data, name_data, mass_data)
 
 def animate_simulation(position_history, names, masses, overide_max_range = -1, block = True):

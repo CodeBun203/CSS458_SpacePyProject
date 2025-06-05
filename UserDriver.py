@@ -3,12 +3,12 @@ import time
 import os
 import Body
 from Simulation import Simulation 
-from Visualizer import animate_simulation, anim_data, run_anim
+from Visualizer import run_anim
 
 def main():
 
     # Adjust these variables to adjust simulation
-    SIMULATION_DURATION_YEARS = 10.0    # Total duration in years
+    SIMULATION_DURATION_YEARS = 10.0        # Total duration in years
     TIME_STEP_MONTHS = .1                   # Simulation time step in months (e.g., 0.1 months ~ 3 days)
                                             # Or use daily steps: (1.0 / (365.25 / 12.0)) for 1 day in months
     STARTING_DATA_FOLDER = "StartingData"   # The sub folder holding starting data
@@ -26,7 +26,7 @@ def main():
         name = SIMULATION_NAME
     )
 
-    # Run the simulation
+    # Run the simulation and display elapsed tim
     start_time = time.time()
     print("Starting " + SIMULATION_NAME + f" simulation from Driver.py (duration: {SIMULATION_DURATION_YEARS} years, step: {TIME_STEP_MONTHS:.4f} months)...")
     simulation_instance.run_simulation(
