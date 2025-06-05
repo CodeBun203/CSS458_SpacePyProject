@@ -55,10 +55,9 @@ def main():
     print("Attempting to animate simulation...")
     body_names = [body.name for body in simulation_instance.bodies]
     body_masses = [body.mass for body in simulation_instance.bodies]
-    data = anim_data("SolarSystemBase")
-    #animate_simulation(position_history_array, body_names, body_masses)
+
+    data = anim_data("Placeholder")
     animate_simulation(data[0], data[1], data[2])
 
 if __name__ == '__main__':
-    #main()
-    run_anim("SolarSystemBase")
+    main()
