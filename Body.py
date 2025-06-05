@@ -1,3 +1,4 @@
+#Unit Constants
 AU_TO_KM = 149597870.691
 MONTH_TO_SECONDS = 2629800
 AU_PER_MONTH_TO_KM_PER_SECOND = AU_TO_KM / MONTH_TO_SECONDS
@@ -130,6 +131,16 @@ def get_gravitatonal_force_euler(body1, body2):
                                  " type Planetary_Body")
 
 def partial_step(vec1, vec2, time_step):
+    """Used in Runge-Kuta to calcute the change in position with a velocity
+    
+    Method Arguments:
+    * vec1: the position of the body
+    * vec2: the velocity of the body
+    * time_step: the chnage in time
+
+    Output:
+    * the new position
+    """
     return (vec1 + vec2) * time_step
 
 
@@ -336,14 +347,45 @@ class Vector3:
 
     # Added to_list method for Simulation.py position history
     def to_list(self):
+        """Return a Vector3  as a list
+    
+        Method Arguments:
+        * None
+
+        Output:
+        * The vector3 as a list
+
+        components to indexes:
+        x:  0
+        y:  1
+        z:  2
+        """
         return [self.x, self.y, self.z]
 
     # Added copy method for Simulation.py to avoid modifying original vectors during RK steps
     def copy(self):
+        """A deep copy of the Vector3
+    
+        Method Arguments:
+        * None
+
+        Output:
+        * A deep copy of the Vector3
+        """
         return Vector3(self.x, self.y, self.z)
 
     # Added __str__ for easier debugging
     def __str__(self):
+        """Returns the Vector3 as a string
+    
+        Method Arguments:
+        * None
+
+        Output:
+        * A string of the Vector3
+
+        This is primarily used for debugging. In the format of 'Vector3([x], [y], [z])' where [x], [y], and [z] are the float values of self.x, self.y, and self.z
+        """
         return f"Vector3({self.x}, {self.y}, {self.z})"
 
 #==============================================================================
@@ -396,6 +438,26 @@ class Planetary_Body:
     
     @staticmethod
     def calculate_gravitational_force_exerted_by_on(acting_body, target_body):
+        """Returns the Force an exerting object applies 
+        to a target object due to gravity.
+        
+        Method Arguments:
+        * acting_body: the body applying the force
+        * target_body: the body being pulled
+
+        Output:
+        * The forece of gravity experienced by the target body.
+        
+        Uses Netwon's Law Universal Gravitation.
+        
+        G = Gravitational Constant
+        r = distance between planets' center of mass
+        M = mass of the acting body
+        m = mass of the target body
+        F = Force of gravity
+
+        a = ( G * M ) / r^2
+        """
         import numpy as np 
         r_vector = acting_body.pos - target_body.pos 
         dist_sq = r_vector.x**2 + r_vector.y**2 + r_vector.z**2 
@@ -463,8 +525,27 @@ class Planetary_Body:
     
     def get_gravitatonal_acceleration_rk4(self, body_index, system, \
                                           delta_time):
-        """
+        """Returns the acceleration due to gravity from every body in the system on a single body
         
+        Method Arguments:
+        * body_index: The index of the body being acclerated in the system
+        * system: A list of all bodies that apply and feel gravitational forces
+        * delta_time: the timestep of the simulation
+
+        Output:
+        * The acceleration of gravity experienced by the target body over the period of time
+        
+        Using Runge-Kuta, finds the acceleration due to gravity a body experiences over a period.
+
+        The acceleration is found using the Gravitational Field Equation, which derives from Netwon's Law 
+        Universal Gravitation and Newton's Second Law of Motion.
+        
+        G = Gravitational Constant
+        r = distance between planets' center of mass
+        M = mass of the exerting body
+        a = Acceleration due to gravity
+
+        a = ( G * M ) / r^2
         """
         import scipy.constants as sp
         
@@ -474,7 +555,6 @@ class Planetary_Body:
         for index, external_body in enumerate(system):
             if index != body_index:
                 r = get_body_distance(self, external_body)
-                # Not sure if it should be r**2 or r**3
                 temp = G * external_body.mass / r**3 
                 
                 #k1 - Euler's method
@@ -561,6 +641,16 @@ class Planetary_Body:
 
     # Added __str__ for debugging and readability
     def __str__(self):
+        """Returns the Vector3 as a string
+    
+        Method Arguments:
+        * None
+
+        Output:
+        * A string of the Vector3
+
+        This is primarily used for debugging. In the format of 'Vector3([x], [y], [z])' where [x], [y], and [z] are the float values of self.x, self.y, and self.z
+        """
         return (f"PlanetaryBody(Name: {self.name}, Mass: {self.mass}, "
                 f"Pos: {self.pos}, Vel: {self.velocity})")
 

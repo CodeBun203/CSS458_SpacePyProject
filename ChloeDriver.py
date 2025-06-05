@@ -61,7 +61,7 @@ def get_data():
     # Control Variables
     default_G = Body._G_ASTRO_DAYS_REF
     min_perc = 0.5
-    max_perc = 1.5
+    max_perc = 2
     num_runs = 11
     center_bias = 0.75
     sim_name = "GravConstant_"
@@ -82,7 +82,7 @@ def play_animations():
     # Control Variables
     default_G = Body._G_ASTRO_DAYS_REF
     min_perc = 0.5
-    max_perc = 1.5
+    max_perc = 2
     num_runs = 11
     center_bias = 0.75
     sim_name = "GravConstant_"
@@ -95,7 +95,10 @@ def play_animations():
     scaled_steps = (concentrated_steps + 1) / 2 * (end - start) + start
     
     for i in range(0, num_runs):
-        run_anim(sim_name + str(scaled_steps[i]), 3)
+        #run_anim(sim_name + str(scaled_steps[i]), 3)
+        pass
+    run_anim(sim_name + str(scaled_steps[0]), 3)
+    run_anim(sim_name + str(scaled_steps[-1]), 3)
 
 def view_sim(folder_name):
     run_anim(folder_name)
